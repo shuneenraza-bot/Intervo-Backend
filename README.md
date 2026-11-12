@@ -60,8 +60,26 @@ VITE_API_URL=http://localhost:8000/api
 | GET | `/api/auth/me` | signed in | The current user |
 | PUT | `/api/auth/face` | signed in | Enrol or replace Face ID. Body: `{ "template": { "v": 2, "method": "landmarks", "features": [...] } }` |
 | DELETE | `/api/auth/face` | signed in | Remove Face ID |
+| GET | `/api/config` | signed in | Domains, skills, roles, questions, criteria and rules, shaped like `config` in the frontend's `data.js` |
+| GET | `/api/jobs` | signed in | `{ jobs, applications }`. Open jobs; employers also get their own closed jobs, `applicantCount` and the applications on their jobs |
+| POST | `/api/jobs` | employer | Create a job with weighted skills and success criteria |
+| PUT | `/api/jobs/{id}` | job owner | Replace a job (the whole `Job` body) |
+| PATCH | `/api/jobs/{id}/status` | job owner | `{ "status": "open" \| "closed" }` |
+| POST | `/api/jobs/{id}/apply` | candidate | `{ "consent": true }`. Consent also turns on profile sharing |
+| DELETE | `/api/jobs/{id}/apply` | candidate | Withdraw the application |
+| PATCH | `/api/applications/{id}` | job owner | `{ "status": "new" \| "shortlisted" \| "declined" }`. `/api/applications/{id}/status` works too |
+| GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by suitability |
 
 `PUT` and `DELETE /api/auth/face` return the updated `User`.
+
+### Candidate ranking and privacy
+
+`GET /api/jobs/{id}/candidates` returns `{ job, hidden, candidates }`, best fit first. The score is a port of `suitability` in the frontend's `src/lib.js` (see `app/services/suitability.py`): CV skill match, interview evidence on the job's skills and practice consistency, weighted by `suitability` in the `scoring_rules` row.
+
+- Only applicants with `consent = true` on the application **and** `share_with_employers = true` on their profile are returned. Everyone else is counted in `hidden`.
+- Each entry has `application`, `candidate` (id, name, email), `profile`, `cvSummary` (top degree, experience years, project count), `sessions` and `fit`.
+- Answer text, follow-up answers, video indicators, face templates and CV contact details are never sent. `sessions[].answers[].answer` is always `""`.
+- Job skills come back ordered by weight (highest first), then name.
 
 ### Sign-in rules
 
@@ -90,7 +108,7 @@ app/
   models/        SQLAlchemy tables
   schemas/       Pydantic request and response models (camelCase JSON)
   routers/       HTTP endpoints
-  services/      Business logic: auth, password and JWT, face comparison
+  services/      Business logic: auth, password and JWT, face comparison, jobs, suitability
 alembic/         Migrations
 scripts/seed.py  Configuration and demo data, mirrors the frontend's src/data.js
 tests/           pytest suite, runs against the intervo_test database

@@ -4,7 +4,8 @@ Run from the project root, after `alembic upgrade head`:
 
     python -m scripts.seed
 
-Safe to run again: rows that already exist are left untouched.
+Safe to run again: rows that already exist are left untouched, except that demo
+candidate profiles without a CV get their demo CV filled in.
 """
 
 import re
@@ -28,6 +29,7 @@ from app.models import (
     User,
 )
 from app.services.security import hash_password
+from app.services.suitability import js_round  # rounds like the frontend's Math.round
 
 NOW = datetime.now(timezone.utc)
 
@@ -138,6 +140,41 @@ PROFILES = {
     "cand-3": (["React", "TypeScript", "CSS", "HTML", "Git", "Testing", "Communication"], "frontend"),
 }
 
+# user_id -> (degree, institution, dates, experience years, [(project, tech)])
+# Parsed-CV details for the demo candidates, so employers see a CV summary.
+CVS = {
+    "cand-1": ("BS Computer Science", "University of Gujrat", "2021 – 2025", 0.5,
+               [("Student Portal", ["React", "JavaScript"]), ("Recipe Finder", ["React", "CSS"]), ("Portfolio Site", ["HTML", "CSS"])]),
+    "cand-2": ("BS Information Technology", "University of the Punjab", "2020 – 2024", 0,
+               [("Landing Page Redesign", ["HTML", "CSS"]), ("Quiz App", ["JavaScript"])]),
+    "cand-3": ("BS Software Engineering", "COMSATS University", "2019 – 2023", 1.5,
+               [("Task Board", ["React", "TypeScript"]), ("Design System", ["React", "CSS"]),
+                ("Booking Widget", ["TypeScript"]), ("Test Harness", ["Testing"])]),
+}
+
+
+def demo_cv(user_id: str, name: str, email: str, skills: list[str]) -> dict:
+    """A ParsedCV (see API.md) for a demo candidate."""
+    degree, institution, dates, years, projects = CVS[user_id]
+    experience = (
+        [{"title": "Frontend Intern", "company": "Local Software House", "dates": "", "details": "", "months": round(years * 12)}]
+        if years else []
+    )
+    return {
+        "contact": {"name": name, "email": email, "phone": "", "linkedin": "", "github": "", "location": "Pakistan"},
+        "summary": "",
+        "skills": skills,
+        "otherSkills": [],
+        "education": [{"degree": degree, "institution": institution, "dates": dates, "score": ""}],
+        "experience": experience,
+        "projects": [{"name": p, "details": "", "tech": tech} for p, tech in projects],
+        "certifications": [],
+        "experienceYears": years,
+        "sectionsFound": ["education", "skills", "projects"] + (["experience"] if years else []),
+        "warnings": [],
+    }
+
+
 # (user_id, role_id, days ago, [(skill, score)])
 SESSIONS = [
     ("cand-1", "frontend", 12, [("React", 64), ("JavaScript", 70), ("CSS", 58), ("Communication", 66)]),
@@ -227,8 +264,16 @@ def seed() -> None:
             )) and id_ in PROFILES:
                 skills, role_id = PROFILES[id_]
                 db.add(CandidateProfile(user_id=id_, skills=skills, target_role_id=role_id,
+                                        cv=demo_cv(id_, name, email, skills),
                                         share_with_employers=True, consent_at=days_ago(days)))
         db.flush()
+
+        # Demo profiles seeded before CVs existed: fill in the CV, leave everything else alone.
+        for id_, _, name, email, *_ in USERS:
+            profile = db.get(CandidateProfile, id_) if id_ in CVS else None
+            if profile is not None and profile.cv is None:
+                profile.cv = demo_cv(id_, name, email, profile.skills or PROFILES[id_][0])
+                added += 1
 
         for job in JOBS:
             j = dict(job)
@@ -263,12 +308,12 @@ def seed() -> None:
                     question=q_text, type=q_type, score=score, criteria=criteria, answer=""))
             db.add(InterviewSession(
                 id=session_id, candidate_id=user_id, role_id=role_id, mode="text", date=days_ago(days),
-                score=round(sum(s for _, s in scores) / len(scores)), answers=answers))
+                score=js_round(sum(s for _, s in scores) / len(scores)), answers=answers))
             added += 1
 
         db.commit()
 
-    print(f"Seed complete: {added} new rows added (existing rows were left unchanged).")
+    print(f"Seed complete: {added} rows added or filled in (other existing rows were left unchanged).")
     print("Demo sign-ins: ayesha@intervo.demo / Demo@1234 (candidate), "
           "hr@northstar.demo / Demo@1234 (employer), admin@intervo.demo / Admin@1234 (admin)")
 
