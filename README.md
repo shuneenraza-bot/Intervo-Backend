@@ -69,6 +69,8 @@ VITE_API_URL=http://localhost:8000/api
 | DELETE | `/api/jobs/{id}/apply` | candidate | Withdraw the application |
 | PATCH | `/api/applications/{id}` | job owner | `{ "status": "new" \| "shortlisted" \| "declined" }`. `/api/applications/{id}/status` works too |
 | GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by suitability |
+| PUT | `/api/profile` | candidate | Save `{ skills, cv: { education, experienceYears, projects } \| null, shareWithEmployers }`. The suitability score reads these |
+| POST | `/api/sessions` | candidate | Save a finished practice session: per-answer `skill`, `score`, `criteria`, `indicators` (no answer text). Re-sending the same `id` returns the stored session with `200` |
 
 `PUT` and `DELETE /api/auth/face` return the updated `User`.
 
