@@ -64,8 +64,8 @@ def build_cv(llm: LLMCV, text: str, skills: list[dict]) -> ParsedCV:
     experience = []
     for e in llm.experience:
         item = e.model_dump()
-        if not item["months"]:
-            item["months"] = cv_rules.months_between(e.dates)
+        # Never trust AI numbers derived from dates: always computed from the date range.
+        item["months"] = cv_rules.months_between(e.dates)
         experience.append(item)
 
     projects = []

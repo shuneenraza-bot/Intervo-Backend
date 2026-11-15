@@ -360,3 +360,28 @@ def test_gemini_jd_is_normalised(client, auth, library, monkeypatch):
     assert body["provider"] == "gemini" and body["minYears"] == 2
     assert {"name": "React", "weight": 3} in body["skills"] and {"name": "Git", "weight": 1} in body["skills"]
     assert all(s["name"] != "Cobol" for s in body["skills"])
+
+
+def test_experience_years_are_computed_in_python_not_taken_from_gemini(client, auth, library, monkeypatch):
+    lying = {**GOOD, "experienceYears": 0.5, "experience_years": 0.5, "experience": [
+        {"title": "Developer", "company": "Acme", "dates": "Jan 2022 - Jan 2023", "details": "", "months": 1},
+        {"title": "Engineer", "company": "Beta", "dates": "Feb 2023 - Feb 2024", "details": "", "months": 2},
+    ]}
+    use(monkeypatch, FakeProvider(lying))
+    cv = upload(client, auth).json()["cv"]
+    assert [e["months"] for e in cv["experience"]] == [12, 12]
+    assert cv["experienceYears"] == 2
+
+
+def test_present_means_today(monkeypatch):
+    from datetime import datetime
+    from app.services import cv_rules
+
+    class Fixed(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 11, 15)
+
+    monkeypatch.setattr(cv_rules, "datetime", Fixed)
+    assert cv_rules.months_between("Nov 2024 - Present") == 24
+    assert cv_rules.years_from_months([{"months": 24}]) == 2
