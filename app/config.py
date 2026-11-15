@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:5174"
     test_database_url: str | None = None
 
+    # AI provider layer (app/services/ai). Keys are never logged.
+    ai_provider: str = "gemini"  # "gemini" or "rules"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.5-flash-lite"
+    groq_api_key: str | None = None  # reserved for a future provider
+    ai_timeout_seconds: int = 20
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip().rstrip("/") for o in self.cors_origins.split(",") if o.strip()]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, false
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, JSONType, TimestampMixin
@@ -54,6 +54,12 @@ class CandidateProfile(TimestampMixin, Base):
     )
     skills: Mapped[list[str]] = mapped_column(JSONType, default=list)  # skill names
     cv: Mapped[dict[str, Any] | None] = mapped_column(JSONType)  # ParsedCV
+    # Full parsed CV from POST/PUT /api/cv (contact details included; never shown to employers).
+    # `cv` above stays the small summary employers' suitability scores read.
+    parsed_cv: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    cv_text: Mapped[str | None] = mapped_column(Text)  # extracted text only, never the raw file
+    cv_file_name: Mapped[str | None] = mapped_column(String(255))
+    cv_provider: Mapped[str | None] = mapped_column(String(20))  # "gemini" or "rules"
     target_role_id: Mapped[str | None] = mapped_column(
         String(40), ForeignKey("job_roles.id", ondelete="SET NULL"), index=True
     )

@@ -1,0 +1,31 @@
+Ayesha Khan
+ayesha.khan@example.com | +92 300 1234567 | Lahore, Pakistan
+linkedin.com/in/ayesha-khan | github.com/ayeshakhan
+
+SUMMARY
+Final-year Computer Science student who builds responsive web apps with React and enjoys clean, tested code.
+
+EDUCATION
+BS Computer Science
+University of Central Punjab, Lahore
+2021 - 2025
+CGPA: 3.4 / 4.0
+
+EXPERIENCE
+Frontend Intern
+Northstar Digital, Lahore
+Jun 2024 - Sep 2024
+- Built reusable React components with TypeScript and CSS
+- Wrote unit tests with Jest and reviewed pull requests on Git
+
+PROJECTS
+Interview Practice App | React, JavaScript, Node.js
+- A web app where students practise answers and get feedback.
+Portfolio Website
+- Responsive site built with HTML and CSS.
+
+SKILLS
+JavaScript, React, TypeScript, HTML, CSS, Git, Communication, Teamwork
+
+CERTIFICATIONS
+- Meta Front-End Developer Certificate

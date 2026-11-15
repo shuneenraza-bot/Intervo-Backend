@@ -227,6 +227,15 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by suitability |
 | PUT | `/api/profile` | candidate | Save `{ skills, cv: { education, experienceYears, projects } \| null, shareWithEmployers }` |
 | POST | `/api/sessions` | candidate | Save a finished practice session's scores. Re-sending the same `id` returns the stored session with `200` |
+| POST | `/api/cv` | candidate | Upload a CV (multipart `file`: PDF/DOCX/TXT, max 5 MB). Returns `{ cv, provider, fileName, text }` and saves it. Alias: `/api/cv/analyze` |
+| GET | `/api/cv` | candidate | The saved parsed CV |
+| PUT | `/api/cv` | candidate | Save the user's edits to the parsed CV |
+| POST | `/api/cv/match` | candidate | `{ roleId }` or `{ jd }`: matched / partial / missing skills, weighted percentage and requirement checks (deterministic) |
+| POST | `/api/jd/parse` | candidate | `{ text, roleSkills? }` -> skills with weights (3 must, 2 normal, 1 nice to have), `minYears`, `education`, `fresherFriendly` |
+
+### CV analysis and the AI provider layer
+
+`AI_PROVIDER=gemini|rules` in `.env` picks the provider (`app/services/ai/`). Gemini output is validated with Pydantic; invalid JSON is retried once, and any failure (no key, quota, timeout, bad output) falls back to the rule-based parser, which ports the frontend's `cvParser.js`. Every CV and job-description response says which one answered in `provider`. Only the CV text is sent to Gemini, with email, phone and profile-link lines removed first; contact details are read locally. Skills returned by Gemini are matched to the `skills` table by name and alias in the application, and the rest become `otherSkills`. The extracted text is stored, never the uploaded file. Matching (`/api/cv/match`) never uses AI. After pulling this change run `alembic upgrade head`; `docs/sample-cv.txt` is a CV to try.
 
 ### Candidate ranking and privacy
 

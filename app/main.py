@@ -2,7 +2,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, candidate, health, jobs
+from app.routers import auth, candidate, cv, health, jobs
 
 app = FastAPI(title="Intervo API", version="0.1.0")
 
@@ -19,4 +19,5 @@ api.include_router(health.router)
 api.include_router(auth.router)
 api.include_router(jobs.router)
 api.include_router(candidate.router)
+api.include_router(cv.router)
 app.include_router(api)
