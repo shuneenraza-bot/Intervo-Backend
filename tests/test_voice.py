@@ -150,6 +150,7 @@ def test_voice_answer_is_transcribed_then_evaluated_like_text(client, auth, libr
     voice = res.json()
     assert (voice["score"], voice["criteria"], voice["provider"]) == (text["score"], text["criteria"], text["provider"])
     assert voice["answerSource"] == "voice" and text["answerSource"] == "text"
+    assert voice["transcript"] == LONG_ANSWER and "transcript" not in text  # the client shows what was heard
     detail = client.get(f"/api/interviews/{iv2['id']}", headers=auth).json()
     stored = next(a for a in detail["questions"] if a["id"] == q2["id"])
     assert stored["answer"] == LONG_ANSWER and stored["answerSource"] == "voice" and stored["indicators"] is None

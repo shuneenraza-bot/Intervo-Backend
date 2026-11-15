@@ -71,7 +71,8 @@ async def answer(interview_id: str, request: Request, user: Candidate, db: DbSes
         await run_in_threadpool(service.own_open, db, user, interview_id)
         t = await run_in_threadpool(stt.transcribe, upload)
         body = AnswerBody(question_id=question_id.strip(), answer=t.text[:service.MAX_ANSWER_CHARS], indicators=indicators)
-        return await run_in_threadpool(service.answer, db, user, interview_id, body, "video" if indicators else "voice")
+        result = await run_in_threadpool(service.answer, db, user, interview_id, body, "video" if indicators else "voice")
+        return {**result, "transcript": body.answer}  # so the client can show what Whisper heard
     finally:
         await form.close()  # the audio is discarded; only the transcript was stored
 

@@ -7,6 +7,7 @@ Python from the admin-configured criteria weights, never by the model."""
 
 import logging
 import random
+import time
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
@@ -29,6 +30,8 @@ from app.models import (
 )
 from app.schemas.base import to_ms
 from app.schemas.interview import MAX_ANSWER_CHARS, AnswerBody, FollowUpBody, LLMEvaluation, LLMFollowUp, LLMQuestion, StartIn
+from app.config import settings
+from app.services import ai
 from app.services.ai import RuleBasedProvider, run_json_task
 from app.services.ai.prompts import RUBRIC, evaluation_prompt, follow_up_prompt, question_prompt
 from app.services.catalog import load_rules, load_skills, weighted_skills
@@ -223,8 +226,15 @@ def _evaluate(db: Session, rules: dict, role_title: str, row: SessionAnswer, tex
     def missing(ev: LLMEvaluation) -> list[str]:
         return [k for k in keys if getattr(ev, k) is None]
 
-    llm, provider = run_json_task(
-        evaluation_prompt(role_title, skill, row.type, row.question, row.keywords or [], keys, text), LLMEvaluation, **ctx)
+    prompt = evaluation_prompt(role_title, skill, row.type, row.question, row.keywords or [], keys, text)
+    started = time.monotonic()
+    llm, provider = run_json_task(prompt, LLMEvaluation, **ctx)
+    if provider == "rules" and ai.get_provider().name != "rules" and time.monotonic() - started < settings.ai_timeout_seconds / 2:
+        # Gemini is configured but the call failed fast (rate limit, brief network error). One more try
+        # beats grading a whole answer, or a follow-up, with the offline evaluator. A slow failure (timeout)
+        # is not retried so the candidate isn't kept waiting.
+        log.warning("evaluate: Gemini failed quickly; retrying once before falling back to rules")
+        llm, provider = run_json_task(prompt, LLMEvaluation, **ctx)
     if provider != "rules" and missing(llm):
         log.warning("evaluate: %s omitted criteria %s; retrying once with a stricter prompt", provider, missing(llm))
         retry, retry_provider = run_json_task(

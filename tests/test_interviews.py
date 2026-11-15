@@ -351,3 +351,50 @@ def test_a_missing_required_criterion_is_handled_the_same_way(client, auth, libr
     interview, q = _technical(client, auth)
     body = answer(client, auth, interview, q, LONG_ANSWER).json()
     assert body["provider"] == "gemini+rules" and body["criteria"]["technical"] == 70
+
+
+# ---------- the follow-up re-evaluation uses the same retry + fill-only-missing path ----------
+
+def _ask_follow_up(client, auth, interview, q):
+    first = answer(client, auth, interview, q, "Short.").json()
+    assert first["needsFollowUp"] is True
+    return first, lambda: client.post(f"/api/interviews/{interview['id']}/answers/{first['answerId']}/follow-up",
+                                      headers=auth, json={"answer": LONG_ANSWER})
+
+
+def test_follow_up_retries_a_missing_criterion_and_fills_only_the_gap(client, auth, library, monkeypatch):
+    # the answer scores completeness 30 (asks a follow-up); the follow-up omits "technical" twice
+    low = SequencedGemini({**FULL, "completeness": 30}, MISSING_TECH, MISSING_TECH)
+    monkeypatch.setattr(ai, "get_provider", lambda: low)
+    interview, q = _technical(client, auth)
+    first, follow = _ask_follow_up(client, auth, interview, q)
+    low.prompts.clear()
+    body = follow().json()
+    assert body["provider"] == "gemini+rules"
+    c = body["criteria"]
+    assert (c["relevance"], c["completeness"], c["clarity"], c["communication"]) == (80, 75, 65, 60)
+    assert isinstance(c["technical"], int)
+    assert len([p for p in low.prompts if "scoring one answer" in p]) == 2  # first try + stricter retry
+
+
+def test_follow_up_survives_a_brief_gemini_failure(client, auth, library, monkeypatch):
+    from app.services.ai.base import AIUnavailable
+
+    class Flaky(SequencedGemini):
+        failures = 0
+
+        def generate_json(self, prompt, schema, **context):
+            if context["task"] == "evaluate" and self.armed and self.failures < 1:
+                self.failures += 1
+                raise AIUnavailable("Gemini API error 429")
+            return super().generate_json(prompt, schema, **context)
+
+    fake = Flaky({**FULL, "completeness": 30}, FULL)
+    fake.armed = False
+    monkeypatch.setattr(ai, "get_provider", lambda: fake)
+    interview, q = _technical(client, auth)
+    first, follow = _ask_follow_up(client, auth, interview, q)
+    assert first["provider"] == "gemini"
+    fake.armed = True
+    body = follow().json()
+    assert body["provider"] == "gemini" and body["criteria"]["technical"] == 70  # retried, not graded by rules
