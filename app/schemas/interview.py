@@ -9,6 +9,7 @@ from app.schemas.base import CamelModel
 
 MAX_ANSWER_CHARS = 8000
 MAX_INDICATORS_JSON = 4000
+INDICATOR_KEYS = ("lighting", "framing", "steadiness", "eyeContact", "expressiveness")  # video cues, 0-100
 
 
 # ---------- requests ----------
@@ -18,6 +19,19 @@ class StartIn(CamelModel):
     job_id: str | None = Field(default=None, max_length=80)
     mode: Literal["text", "voice", "video"] = "text"
     count: int | None = Field(default=None, ge=1, le=10)  # default: scoring_rules.defaultQuestions
+
+
+def validate_indicators(v: dict | None) -> dict | None:
+    import json
+
+    if v is None:
+        return v
+    if len(json.dumps(v)) > MAX_INDICATORS_JSON:
+        raise ValueError("Indicators are too large.")
+    for k in INDICATOR_KEYS:
+        if k in v and (isinstance(v[k], bool) or not isinstance(v[k], (int, float)) or not 0 <= v[k] <= 100):
+            raise ValueError(f"Indicator {k} must be a number from 0 to 100.")
+    return v
 
 
 class _TextBody(CamelModel):
@@ -34,15 +48,12 @@ class _TextBody(CamelModel):
 
     @field_validator("indicators")
     @classmethod
-    def indicators_small(cls, v: dict | None) -> dict | None:
-        import json
-
-        if v is not None and len(json.dumps(v)) > MAX_INDICATORS_JSON:
-            raise ValueError("Indicators are too large.")
-        return v
+    def indicators_ok(cls, v: dict | None) -> dict | None:
+        return validate_indicators(v)
 
 
 class AnswerBody(_TextBody):
+    source: Literal["text", "voice", "video"] | None = None  # default: video if indicators are sent, else text
     question_id: str = Field(min_length=1, max_length=80)  # the question's `id` from the start response
 
 
@@ -63,12 +74,14 @@ Score = Annotated[int, BeforeValidator(_score)]
 
 
 class LLMEvaluation(BaseModel):
-    technical: Score | None = None  # technical questions only
-    relevance: Score
-    completeness: Score
-    clarity: Score
-    communication: Score
-    star: Score | None = None  # behavioural questions only
+    # Every criterion is optional so a model that omits one is detected and handled by the caller
+    # (retry, then fill from the rules evaluator) instead of failing validation.
+    technical: Score | None = None
+    relevance: Score | None = None
+    completeness: Score | None = None
+    clarity: Score | None = None
+    communication: Score | None = None
+    star: Score | None = None
     tips: list[str] = Field(default_factory=list)
     needs_follow_up: bool = False
 

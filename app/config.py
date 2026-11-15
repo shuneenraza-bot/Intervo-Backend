@@ -18,8 +18,13 @@ class Settings(BaseSettings):
     ai_provider: str = "gemini"  # "gemini" or "rules"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.5-flash-lite"
-    groq_api_key: str | None = None  # reserved for a future provider
     ai_timeout_seconds: int = 20
+
+    # Speech-to-text (Whisper via Groq). STT_PROVIDER: "groq" or "none".
+    stt_provider: str = "none"
+    groq_api_key: str | None = None
+    whisper_model: str = "whisper-large-v3-turbo"
+    stt_timeout_seconds: int = 30
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -1,13 +1,18 @@
 """Live end-to-end demo of the interview engine against a running server.
 
 Usage (server already running):
-    python scripts/demo_interview.py [--base http://localhost:8000] [--cv path/to/cv.pdf]
+    python scripts/demo_interview.py [--base http://localhost:8000] [--cv path/to/cv.pdf] [--voice]
+
+--voice answers Q1 by speaking: the answer is turned into a WAV with Windows' built-in text-to-speech
+(or tests/fixtures/sample.wav if that is unavailable), transcribed by the server, then evaluated.
 
 Never prints the JWT. Exits 1 if any check fails.
 """
 
 import argparse
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import httpx
@@ -101,7 +106,20 @@ GOOD_BEHAVIORAL = (
     "handling, and wrote a checklist for testing. Result: we fixed it in three days, delivered on time, and "
     "received the top grade; I learned to communicate early and break work down."
 )
+FIXTURE_WAV = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "sample.wav"
 results: list[tuple[str, bool, str]] = []
+
+
+def speak_to_wav(text: str, out: Path) -> bool:
+    """Spoken WAV from Windows' System.Speech. False if no text-to-speech tool is available."""
+    script = ("Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+              "$s.SetOutputToWaveFile($env:DEMO_WAV); $s.Speak($env:DEMO_TEXT); $s.Dispose()")
+    try:
+        subprocess.run(["powershell", "-NoProfile", "-Command", script], check=True, timeout=120, capture_output=True,
+                       env={**__import__("os").environ, "DEMO_WAV": str(out), "DEMO_TEXT": text})
+        return out.exists() and out.stat().st_size > 1000
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def hr(title: str) -> None:
@@ -139,6 +157,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:8000")
     ap.add_argument("--cv", default=DEFAULT_CV)
+    ap.add_argument("--voice", action="store_true", help="answer Q1 by voice (speech-to-text)")
     args = ap.parse_args()
 
     with httpx.Client(base_url=args.base + "/api", timeout=120) as client:
@@ -161,10 +180,43 @@ def main() -> int:
             print(f"  Q{i} [{q['skill']} | {q['type']} | reason={q['reason']}]\n      {q['question']}")
         base = f"/interviews/{iv['id']}"
 
-        hr("4. Q1 - good detailed answer")
-        a1 = call(client, "POST", f"{base}/answers", json={"questionId": qs[0]["id"], "answer": good_answer(qs[0])})
+        if args.voice:
+            hr("4. Q1 - good answer, spoken (speech-to-text)")
+            spoken = good_answer(qs[0])
+            wav = Path(tempfile.gettempdir()) / "intervo_demo_answer.wav"
+            if speak_to_wav(spoken, wav):
+                print(f"  audio         : generated with text-to-speech ({wav.stat().st_size // 1024} KB)")
+            else:
+                wav = FIXTURE_WAV
+                print(f"  audio         : no text-to-speech tool; using {wav.name} (a tone, so expect an empty transcript)")
+            try:
+                with wav.open("rb") as f:
+                    t = client.post(f"{base}/transcribe", files={"audio": (wav.name, f, "audio/wav")})
+                if t.status_code == 503:
+                    check("speech-to-text available", False, "503 Speech-to-text unavailable (set STT_PROVIDER=groq)")
+                    print("  transcribe    : 503 Speech-to-text unavailable; the frontend would use browser speech recognition")
+                    a1 = call(client, "POST", f"{base}/answers", json={"questionId": qs[0]["id"], "answer": spoken})
+                else:
+                    t.raise_for_status() if t.status_code < 400 else sys.exit(f"transcribe -> HTTP {t.status_code}: {t.text[:300]}")
+                    tj = t.json()
+                    print(f"  spoken text   : {spoken[:90]}...")
+                    print(f"  transcript    : {tj['transcript']}")
+                    print(f"  duration/lang : {tj['durationSeconds']}s / {tj['language']}   (provider: {tj['provider']})")
+                    check("transcript returned", bool(tj["transcript"].strip()), f"{len(tj['transcript'].split())} words")
+                    with wav.open("rb") as f:
+                        a1 = call(client, "POST", f"{base}/answers", data={"questionId": qs[0]["id"]},
+                                  files={"audio": (wav.name, f, "audio/wav")})
+                    stored = next(q for q in call(client, "GET", base)["questions"] if q["id"] == qs[0]["id"])
+                    check("answer stored as voice, transcript saved", a1["answerSource"] == "voice" and bool(stored["answer"]),
+                          f"source={a1['answerSource']}")
+            finally:
+                if wav != FIXTURE_WAV:
+                    wav.unlink(missing_ok=True)  # never keep the audio
+        else:
+            hr("4. Q1 - good detailed answer")
+            a1 = call(client, "POST", f"{base}/answers", json={"questionId": qs[0]["id"], "answer": good_answer(qs[0])})
         show_eval(a1)
-        check("provider is gemini", a1["provider"] == "gemini", f"provider={a1['provider']}")
+        check("provider is gemini", a1["provider"].startswith("gemini"), f"provider={a1['provider']}")
 
         hr("5. Q2 - weak answer, then follow-up")
         a2 = call(client, "POST", f"{base}/answers", json={"questionId": qs[1]["id"], "answer": WEAK_ANSWER})

@@ -291,3 +291,63 @@ def test_a_candidate_cannot_read_or_change_another_candidates_interview(client, 
 def test_interview_endpoints_are_for_signed_in_candidates(client, auth, library):
     assert client.get("/api/interviews").status_code == 401
     assert client.get("/api/progress").status_code == 401
+
+
+# ---------- Gemini omits a criterion: retry, then fill only the gap from rules ----------
+
+class SequencedGemini(FakeGemini):
+    """Returns the queued evaluations in order, then repeats the last one."""
+
+    def __init__(self, *evaluations):
+        super().__init__(evaluations[0])
+        self.queue = list(evaluations)
+
+    def generate_json(self, prompt, schema, **context):
+        if context["task"] == "evaluate":
+            self.prompts.append(prompt)
+            return self.queue.pop(0) if len(self.queue) > 1 else self.queue[0]
+        return super().generate_json(prompt, schema, **context)
+
+
+FULL = {"technical": 70, "relevance": 80, "completeness": 75, "clarity": 65, "communication": 60, "tips": ["a"]}
+MISSING_TECH = {k: v for k, v in FULL.items() if k != "technical"}
+
+
+def _technical(client, auth):
+    interview = start(client, auth)
+    return interview, next(q for q in interview["questions"] if q["type"] == "technical")
+
+
+def test_a_missing_criterion_is_retried_with_a_stricter_prompt(client, auth, library, monkeypatch, caplog):
+    fake = SequencedGemini(MISSING_TECH, FULL)
+    monkeypatch.setattr(ai, "get_provider", lambda: fake)
+    interview, q = _technical(client, auth)
+    with caplog.at_level("WARNING"):
+        body = answer(client, auth, interview, q, LONG_ANSWER).json()
+    assert body["provider"] == "gemini" and body["criteria"]["technical"] == 70
+    evals = [p for p in fake.prompts if "scoring one answer" in p]
+    assert len(evals) == 2 and "MUST contain" not in evals[0] and "MUST contain" in evals[1]
+    assert any("omitted criteria ['technical']" in r.message for r in caplog.records)
+    assert LONG_ANSWER[:40] not in caplog.text  # answer text is never logged
+
+
+def test_a_criterion_still_missing_after_the_retry_is_filled_from_rules_only(client, auth, library, monkeypatch, caplog):
+    fake = SequencedGemini(MISSING_TECH, MISSING_TECH)
+    monkeypatch.setattr(ai, "get_provider", lambda: fake)
+    interview, q = _technical(client, auth)
+    with caplog.at_level("WARNING"):
+        body = answer(client, auth, interview, q, LONG_ANSWER).json()
+    assert body["provider"] == "gemini+rules"
+    c = body["criteria"]
+    assert (c["relevance"], c["completeness"], c["clarity"], c["communication"]) == (80, 75, 65, 60)  # Gemini's kept
+    assert isinstance(c["technical"], int) and 0 <= c["technical"] <= 100  # filled by the rules evaluator
+    assert any("filling only those from the rules evaluator" in r.message for r in caplog.records)
+    assert LONG_ANSWER[:40] not in caplog.text
+
+
+def test_a_missing_required_criterion_is_handled_the_same_way(client, auth, library, monkeypatch):
+    fake = SequencedGemini({k: v for k, v in FULL.items() if k != "clarity"})
+    monkeypatch.setattr(ai, "get_provider", lambda: fake)
+    interview, q = _technical(client, auth)
+    body = answer(client, auth, interview, q, LONG_ANSWER).json()
+    assert body["provider"] == "gemini+rules" and body["criteria"]["technical"] == 70

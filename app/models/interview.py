@@ -49,6 +49,7 @@ class SessionAnswer(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("type IN ('technical', 'behavioral')", name="type"),
         CheckConstraint("score BETWEEN 0 AND 100", name="score"),
+        CheckConstraint("answer_source IN ('text', 'voice', 'video')", name="answer_source"),
     )
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
@@ -74,6 +75,7 @@ class SessionAnswer(TimestampMixin, Base):
     keywords: Mapped[list[str] | None] = mapped_column(JSONType)  # snapshot of the question's keywords
     tips: Mapped[list[str] | None] = mapped_column(JSONType)
     provider: Mapped[str | None] = mapped_column(String(20))  # who evaluated it: "gemini" or "rules"
+    answer_source: Mapped[str] = mapped_column(String(10), default="text", server_default="text")  # text | voice | video
     needs_follow_up: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     follow_up_question: Mapped[str | None] = mapped_column(Text)  # the follow-up offered to the candidate
     answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

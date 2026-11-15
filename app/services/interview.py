@@ -5,6 +5,7 @@ Selection and skill history port `selectQuestions` and `skillPerformance` from t
 src/lib.js. Scores the AI returns are clamped, and every overall score is calculated here in
 Python from the admin-configured criteria weights, never by the model."""
 
+import logging
 import random
 from datetime import datetime, timezone
 
@@ -27,12 +28,13 @@ from app.models import (
     User,
 )
 from app.schemas.base import to_ms
-from app.schemas.interview import AnswerBody, FollowUpBody, LLMEvaluation, LLMFollowUp, LLMQuestion, StartIn
+from app.schemas.interview import MAX_ANSWER_CHARS, AnswerBody, FollowUpBody, LLMEvaluation, LLMFollowUp, LLMQuestion, StartIn
 from app.services.ai import RuleBasedProvider, run_json_task
 from app.services.ai.prompts import RUBRIC, evaluation_prompt, follow_up_prompt, question_prompt
 from app.services.catalog import load_rules, load_skills, weighted_skills
 from app.services.suitability import DEFAULT_RULES, average, js_round, match_skills, skill_performance
 
+log = logging.getLogger("intervo.interview")
 DEFAULTS = {**DEFAULT_RULES, "followUpBelow": 55, "defaultQuestions": 5}
 # Used only when the evaluation_criteria table is empty: (key, weight, applies_to).
 DEFAULT_CRITERIA = [("technical", 2, "technical"), ("relevance", 2, "all"), ("completeness", 2, "all"),
@@ -216,14 +218,28 @@ def _evaluate(db: Session, rules: dict, role_title: str, row: SessionAnswer, tex
     question = {"text": row.question, "keywords": row.keywords or [], "skill": skill, "type": row.type}
     aliases = (row.skill.aliases if row.skill else None) or []
     below = int(rules["followUpBelow"])
+    ctx = {"task": "evaluate", "answer": text, "question": question, "aliases": aliases, "follow_up_below": below}
+
+    def missing(ev: LLMEvaluation) -> list[str]:
+        return [k for k in keys if getattr(ev, k) is None]
+
     llm, provider = run_json_task(
-        evaluation_prompt(role_title, skill, row.type, row.question, row.keywords or [], keys, text), LLMEvaluation,
-        task="evaluate", answer=text, question=question, aliases=aliases, follow_up_below=below,
-    )
-    if any(getattr(llm, k) is None for k in keys):  # the model skipped a criterion it was asked for
-        raw = RuleBasedProvider().generate_json("", LLMEvaluation, task="evaluate", answer=text, question=question,
-                                                aliases=aliases, follow_up_below=below)
-        llm, provider = LLMEvaluation.model_validate(raw), "rules"
+        evaluation_prompt(role_title, skill, row.type, row.question, row.keywords or [], keys, text), LLMEvaluation, **ctx)
+    if provider != "rules" and missing(llm):
+        log.warning("evaluate: %s omitted criteria %s; retrying once with a stricter prompt", provider, missing(llm))
+        retry, retry_provider = run_json_task(
+            evaluation_prompt(role_title, skill, row.type, row.question, row.keywords or [], keys, text, strict=True),
+            LLMEvaluation, **ctx)
+        # If the retry itself fell back to rules, run_json_task logged why; keep Gemini's first scores.
+        if retry_provider != "rules" and len(missing(retry)) < len(missing(llm)):
+            llm = retry
+    if provider != "rules" and missing(llm):
+        gaps = missing(llm)
+        log.warning("evaluate: %s still omitted criteria %s after the retry; filling only those from the rules evaluator",
+                    provider, gaps)
+        raw = LLMEvaluation.model_validate(RuleBasedProvider().generate_json("", LLMEvaluation, **ctx))
+        llm = llm.model_copy(update={k: getattr(raw, k) for k in gaps})
+        provider = f"{provider}+rules"
 
     scores = {k: getattr(llm, k) for k in keys}
     total_weight = sum(w for _, w in criteria) or 1
@@ -231,7 +247,7 @@ def _evaluate(db: Session, rules: dict, role_title: str, row: SessionAnswer, tex
     return {
         "score": overall, "criteria": scores, "provider": provider,
         "tips": llm.tips or ["Add a concrete example from a project and say what the outcome was."],
-        "needs_follow_up": llm.needs_follow_up or llm.completeness < below,
+        "needs_follow_up": llm.needs_follow_up or scores.get("completeness", overall) < below,
     }
 
 
@@ -275,6 +291,11 @@ def _open_session(db: Session, user: User, interview_id: str) -> InterviewSessio
     return session
 
 
+def own_open(db: Session, user: User, interview_id: str) -> InterviewSession:
+    """For routers: 404 if it isn't the candidate's, 409 if it's finished."""
+    return _open_session(db, user, interview_id)
+
+
 def _role_title(session: InterviewSession) -> str:
     return session.role.title if session.role else "this"
 
@@ -282,13 +303,14 @@ def _role_title(session: InterviewSession) -> str:
 def _result(row: SessionAnswer, session: InterviewSession) -> dict:
     return {
         "answerId": row.id, "score": row.score, "criteria": row.criteria, "tips": row.tips or [],
-        "provider": row.provider, "needsFollowUp": row.needs_follow_up,
+        "provider": row.provider, "needsFollowUp": row.needs_follow_up, "answerSource": row.answer_source,
         "followUp": {"question": row.follow_up_question} if row.needs_follow_up else None,
         "answered": sum(1 for a in session.answers if a.answered_at is not None), "total": len(session.answers),
     }
 
 
-def answer(db: Session, user: User, interview_id: str, body: AnswerBody) -> dict:
+def answer(db: Session, user: User, interview_id: str, body: AnswerBody, source: str | None = None) -> dict:
+    """The one evaluation pipeline: text, voice and video answers all arrive here as text."""
     session = _open_session(db, user, interview_id)
     row = next((a for a in session.answers if body.question_id in (a.id, a.question_id)), None)
     if row is None:
@@ -298,6 +320,7 @@ def answer(db: Session, user: User, interview_id: str, body: AnswerBody) -> dict
 
     ev = _evaluate(db, _rules(db), _role_title(session), row, body.answer)
     row.answer, row.indicators, row.answered_at = body.answer, body.indicators, _now()
+    row.answer_source = source or body.source or ("video" if body.indicators else "text")
     _store_evaluation(row, ev)
     if row.needs_follow_up:
         row.follow_up_question = _follow_up_question(row, _role_title(session), body.answer)
@@ -347,6 +370,7 @@ def _answer_out(a: SessionAnswer) -> dict:
         "score": a.score, "criteria": a.criteria or {}, "tips": a.tips or [], "provider": a.provider,
         "needsFollowUp": a.needs_follow_up, "followUp": a.follow_up or None,
         "followUpQuestion": a.follow_up_question if a.needs_follow_up else None, "indicators": a.indicators,
+        "answerSource": a.answer_source,
     }
 
 
