@@ -255,7 +255,10 @@ def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
     if visible:
         sessions = db.scalars(
             select(InterviewSession)
-            .where(InterviewSession.candidate_id.in_(sessions_by_candidate))
+            .where(
+                InterviewSession.candidate_id.in_(sessions_by_candidate),
+                InterviewSession.status == "completed",
+            )
             .options(
                 selectinload(InterviewSession.answers).selectinload(SessionAnswer.skill),
                 selectinload(InterviewSession.role),

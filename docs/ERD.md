@@ -22,6 +22,7 @@ erDiagram
     users ||--o{ applications : "submits"
     users ||--o{ interview_sessions : "practises in"
     job_roles |o--o{ interview_sessions : "is practised in"
+    jobs |o--o{ interview_sessions : "job_id"
     interview_sessions ||--o{ session_answers : "contains"
     skills |o--o{ session_answers : "is assessed in"
     question_templates |o--o{ session_answers : "is asked in"
@@ -47,6 +48,10 @@ erDiagram
         varchar(40) user_id PK, FK
         jsonb skills
         jsonb cv "nullable"
+        jsonb parsed_cv "nullable"
+        text cv_text "nullable"
+        varchar(255) cv_file_name "nullable"
+        varchar(20) cv_provider "nullable"
         varchar(40) target_role_id FK "nullable"
         boolean share_with_employers
         timestamptz consent_at "nullable"
@@ -89,6 +94,7 @@ erDiagram
         text text
         jsonb keywords
         text follow_up
+        varchar(20) source
         timestamptz created_at
         timestamptz updated_at
     }
@@ -145,7 +151,9 @@ erDiagram
         varchar(40) id PK
         varchar(40) candidate_id FK
         varchar(40) role_id FK "nullable"
+        varchar(40) job_id FK "nullable"
         varchar(20) mode
+        varchar(20) status
         int score
         timestamptz date
         timestamptz created_at
@@ -165,6 +173,12 @@ erDiagram
         jsonb indicators "nullable"
         varchar(20) reason "nullable"
         jsonb follow_up "nullable"
+        jsonb keywords "nullable"
+        jsonb tips "nullable"
+        varchar(20) provider "nullable"
+        boolean needs_follow_up
+        text follow_up_question "nullable"
+        timestamptz answered_at "nullable"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -207,6 +221,7 @@ erDiagram
 | `users` | `applications` | `candidate_id` | one to many, parent required | CASCADE |
 | `users` | `interview_sessions` | `candidate_id` | one to many, parent required | CASCADE |
 | `job_roles` | `interview_sessions` | `role_id` | one to many, parent optional | SET NULL |
+| `jobs` | `interview_sessions` | `job_id` | one to many, parent optional | SET NULL |
 | `interview_sessions` | `session_answers` | `session_id` | one to many, parent required | CASCADE |
 | `skills` | `session_answers` | `skill_id` | one to many, parent optional | SET NULL |
 | `question_templates` | `session_answers` | `question_id` | one to many, parent optional | SET NULL |

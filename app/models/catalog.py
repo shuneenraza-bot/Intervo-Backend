@@ -72,6 +72,7 @@ class QuestionTemplate(TimestampMixin, Base):
     text: Mapped[str] = mapped_column(Text)
     keywords: Mapped[list[str]] = mapped_column(JSONType, default=list)
     follow_up: Mapped[str] = mapped_column(Text, default="", server_default="")
+    source: Mapped[str] = mapped_column(String(20), default="admin", server_default="admin")  # "admin" | "generated"
 
     skill: Mapped[Skill] = relationship()
 

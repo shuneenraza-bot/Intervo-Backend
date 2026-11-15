@@ -31,8 +31,8 @@ Status at the 30% evaluation. "Where it runs" matters because part of the system
 | 1 | Secure, role-based access | Sign up and sign in for candidates and employers, seeded admin, JWT, argon2 password hashes, attempt limits | Backend | ✅ Done |
 | 2 | Convenient sign-in | Face ID as an alternative to the password, with a blink liveness check | Capture in browser (MediaPipe), matching on backend | ✅ Done (prototype matcher) |
 | 3 | CV analysis and skill gap | Parse PDF/DOCX/TXT, extract skills, compare with a role template or a pasted job description | Browser (pdf.js) | ✅ Done in browser · ⏳ server-side with Gemini |
-| 4 | Mock interviews | Text, voice and video modes; questions chosen from weaknesses, CV gaps and the role's key skills; follow-up questions | Browser | ✅ Done in browser · ⏳ server-side |
-| 5 | Answer evaluation and feedback | Per-criterion scores against the admin rubric | Browser, rule-based | ✅ Rule-based · ⏳ Gemini evaluator |
+| 4 | Mock interviews | Text, voice and video modes; questions chosen from weaknesses, CV gaps and the role's key skills; follow-up questions | Browser, and backend (`/api/interviews`) | ✅ Done in browser and on the server |
+| 5 | Answer evaluation and feedback | Per-criterion scores against the admin rubric | Browser (rules); backend (Gemini with rule-based fallback) | ✅ Done |
 | 6 | Speech to text | Spoken answers become a transcript | Browser (Web Speech API) | ✅ Browser · ⏳ Whisper |
 | 7 | Presentation cues in video mode | Eye contact and expressiveness from face landmarks | Browser (MediaPipe) | ✅ Done |
 | 8 | Progress tracking | Score history per skill and persistent weakness detection | Browser; session scores are also saved to PostgreSQL | ✅ Done |
@@ -227,6 +227,12 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by suitability |
 | PUT | `/api/profile` | candidate | Save `{ skills, cv: { education, experienceYears, projects } \| null, shareWithEmployers }` |
 | POST | `/api/sessions` | candidate | Save a finished practice session's scores. Re-sending the same `id` returns the stored session with `200` |
+| POST | `/api/interviews` | candidate | Start an interview: `{ roleId \| jobId, mode, count }`. Questions are chosen on the server (weaknesses, CV gaps, role skills, one behavioural) with a `reason` each |
+| POST | `/api/interviews/{id}/answers` | candidate | `{ questionId, answer, indicators? }`: rubric score, tips, provider and a follow-up question when needed |
+| POST | `/api/interviews/{id}/answers/{answerId}/follow-up` | candidate | `{ answer }`: re-scores the original answer and the follow-up together |
+| POST | `/api/interviews/{id}/finish` | candidate | Computes the session score, marks it `completed` and returns the summary |
+| GET | `/api/interviews`, `/api/interviews/{id}` | candidate | Own history and one interview (other candidates' ids return `404`) |
+| GET | `/api/progress` | candidate | Per-skill history, score trend and weakness profile with coaching tips |
 | POST | `/api/cv` | candidate | Upload a CV (multipart `file`: PDF/DOCX/TXT, max 5 MB). Returns `{ cv, provider, fileName, text }` and saves it. Alias: `/api/cv/analyze` |
 | GET | `/api/cv` | candidate | The saved parsed CV |
 | PUT | `/api/cv` | candidate | Save the user's edits to the parsed CV |
@@ -236,6 +242,10 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 ### CV analysis and the AI provider layer
 
 `AI_PROVIDER=gemini|rules` in `.env` picks the provider (`app/services/ai/`). Gemini output is validated with Pydantic; invalid JSON is retried once, and any failure (no key, quota, timeout, bad output) falls back to the rule-based parser, which ports the frontend's `cvParser.js`. Every CV and job-description response says which one answered in `provider`. Only the CV text is sent to Gemini, with email, phone and profile-link lines removed first; contact details are read locally. Skills returned by Gemini are matched to the `skills` table by name and alias in the application, and the rest become `otherSkills`. The extracted text is stored, never the uploaded file. Matching (`/api/cv/match`) never uses AI. After pulling this change run `alembic upgrade head`; `docs/sample-cv.txt` is a CV to try.
+
+### Interview engine
+
+Walkthrough: [docs/run-an-interview.md](docs/run-an-interview.md). Selection and skill history port `selectQuestions` and `skillPerformance` from the frontend. Answers are scored against a fixed rubric: Gemini returns 0 to 100 per criterion plus tips, the application validates and clamps them and calculates the overall score from the `evaluation_criteria` weights (the model never does). Invalid or unavailable Gemini output falls back to the rule-based evaluator (a port of `evaluateAnswer`). Only the role title, skill, question, rubric and answer text are sent to Gemini, never the candidate's name or email. Run `alembic upgrade head` after pulling this change.
 
 ### Candidate ranking and privacy
 

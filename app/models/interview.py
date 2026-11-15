@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, JSONType, TimestampMixin
@@ -18,6 +18,7 @@ class InterviewSession(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("mode IN ('text', 'voice', 'video')", name="mode"),
         CheckConstraint("score BETWEEN 0 AND 100", name="score"),
+        CheckConstraint("status IN ('in_progress', 'completed')", name="status"),
     )
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
@@ -27,7 +28,12 @@ class InterviewSession(TimestampMixin, Base):
     role_id: Mapped[str | None] = mapped_column(
         String(40), ForeignKey("job_roles.id", ondelete="SET NULL"), index=True
     )
+    job_id: Mapped[str | None] = mapped_column(
+        String(40), ForeignKey("jobs.id", ondelete="SET NULL"), index=True
+    )  # set when the interview was started for a specific job
     mode: Mapped[str] = mapped_column(String(20), default="text", server_default="text")
+    # Sessions saved by POST /sessions are already finished; the interview engine starts "in_progress".
+    status: Mapped[str] = mapped_column(String(20), default="completed", server_default="completed", index=True)
     score: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
 
@@ -64,6 +70,13 @@ class SessionAnswer(TimestampMixin, Base):
     indicators: Mapped[dict[str, Any] | None] = mapped_column(JSONType)  # video-mode cues
     reason: Mapped[str | None] = mapped_column(String(20))  # weakness | gap | role | general
     follow_up: Mapped[dict[str, Any] | None] = mapped_column(JSONType)  # {question, answer, before}
+    # Interview engine: the question is planned when the session starts and answered later.
+    keywords: Mapped[list[str] | None] = mapped_column(JSONType)  # snapshot of the question's keywords
+    tips: Mapped[list[str] | None] = mapped_column(JSONType)
+    provider: Mapped[str | None] = mapped_column(String(20))  # who evaluated it: "gemini" or "rules"
+    needs_follow_up: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    follow_up_question: Mapped[str | None] = mapped_column(Text)  # the follow-up offered to the candidate
+    answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     session: Mapped[InterviewSession] = relationship(back_populates="answers")
     skill: Mapped[Skill | None] = relationship()
