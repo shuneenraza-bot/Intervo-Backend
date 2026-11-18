@@ -312,6 +312,28 @@ def parse_jd(text: str, skills: list[dict], role_skills: list[dict] | None = Non
 
 # ---------- matching ----------
 
+def requirement_checks(jd: dict, experience_years: float, degrees: list[str]) -> list[dict]:
+    """Experience and education checks of a CV against a parsed job description
+    (`min_years`, `education`, `fresher_friendly`). Only requirements the JD states are checked."""
+    checks = []
+    if jd.get("min_years", 0) > 0:
+        checks.append({
+            "key": "experience", "label": "Experience",
+            "required": f"{jd['min_years']}+ years", "actual": f"{experience_years:g} years",
+            "met": experience_years >= jd["min_years"] or bool(jd.get("fresher_friendly")),
+        })
+    if jd.get("education"):
+        need = education_level(jd["education"])
+        levels = [(education_level(d), d) for d in degrees if d]
+        have = max((lvl for lvl, _ in levels), default=0)
+        checks.append({
+            "key": "education", "label": "Education", "required": jd["education"],
+            "actual": next((d for lvl, d in levels if lvl == have), "Not found"),
+            "met": need == 0 or have >= need,
+        })
+    return checks
+
+
 def match_skills(candidate_skills: list[str], required: list[dict], skills: list[dict]) -> dict:
     """Port of matchSkills: weighted match; a related skill earns half the weight ("partial")."""
     have = set(candidate_skills)

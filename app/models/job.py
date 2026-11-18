@@ -17,7 +17,6 @@ class Job(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("status IN ('open', 'closed')", name="status"),
         CheckConstraint("mode IN ('On-site', 'Hybrid', 'Remote')", name="mode"),
-        CheckConstraint("min_score BETWEEN 0 AND 100", name="min_score"),
         CheckConstraint("min_match BETWEEN 0 AND 100", name="min_match"),
     )
 
@@ -37,7 +36,6 @@ class Job(TimestampMixin, Base):
     type: Mapped[str] = mapped_column(String(60), default="", server_default="")
     description: Mapped[str] = mapped_column(Text, default="", server_default="")
     status: Mapped[str] = mapped_column(String(20), default="open", server_default="open", index=True)
-    min_score: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     min_match: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     success_notes: Mapped[str] = mapped_column(Text, default="", server_default="")
 

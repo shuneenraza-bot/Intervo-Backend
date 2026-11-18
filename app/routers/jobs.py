@@ -62,7 +62,7 @@ def withdraw(job_id: str, user: Candidate, db: DbSession):
 
 @router.get("/jobs/{job_id}/candidates")
 def candidates(job_id: str, user: Employer, db: DbSession) -> dict:
-    """Ranked applicants with an explainable suitability score (job owner only)."""
+    """Applicants ranked by CV skill match, with no interview data (job owner only)."""
     return job_service.ranked_candidates(db, job_id, user)
 
 

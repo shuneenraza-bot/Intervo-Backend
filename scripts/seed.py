@@ -29,7 +29,7 @@ from app.models import (
     User,
 )
 from app.services.security import hash_password
-from app.services.suitability import js_round  # rounds like the frontend's Math.round
+from app.services.matching import js_round  # rounds like the frontend's Math.round
 
 NOW = datetime.now(timezone.utc)
 
@@ -119,7 +119,6 @@ RULES = {
     "followUpBelow": 55,
     "defaultQuestions": 5,
     "faceThreshold": 0.55,
-    "suitability": {"cv": 40, "interview": 45, "consistency": 15},
 }
 
 # ---------------- Demo users & data ----------------
@@ -190,27 +189,27 @@ JOBS = [
          location="Lahore", mode="Remote", level="Entry level", type="Full-time", days=9,
          description="Build accessible, responsive interfaces alongside a small product team shipping weekly.",
          skills=[("React", 3), ("JavaScript", 3), ("CSS", 2), ("Git", 1), ("Testing", 1)],
-         min_score=65, min_match=60, success_notes="Comfortable explaining component design and responsive layouts."),
+         min_match=60, success_notes="Comfortable explaining component design and responsive layouts."),
     dict(id="job-2", employer_id="nsx-1", company="Northstar Digital", title="Web Developer Intern", role_id="frontend",
          location="Lahore", mode="Hybrid", level="Internship", type="Internship", days=4,
          description="Pair with senior developers on client websites and learn a production review workflow.",
          skills=[("HTML", 2), ("CSS", 2), ("JavaScript", 2), ("Git", 1)],
-         min_score=55, min_match=50, success_notes="Eagerness to learn and clear communication."),
+         min_match=50, success_notes="Eagerness to learn and clear communication."),
     dict(id="job-3", employer_id=None, company="Vertex Systems", title="Junior Software Engineer", role_id="backend",
          location="Karachi", mode="On-site", level="Entry level", type="Full-time", days=7,
          description="Contribute to features, tests and maintenance for internal business applications.",
          skills=[("Python", 3), ("SQL", 3), ("REST APIs", 2), ("Problem solving", 2)],
-         min_score=65, min_match=60, success_notes=""),
+         min_match=60, success_notes=""),
     dict(id="job-4", employer_id=None, company="Crescent Analytics", title="Associate Business Analyst", role_id="analyst",
          location="Lahore", mode="Hybrid", level="Entry level", type="Full-time", days=3,
          description="Turn stakeholder questions into clear reports and help teams make data-backed decisions.",
          skills=[("Data analysis", 3), ("Excel", 3), ("SQL", 2), ("Communication", 2)],
-         min_score=60, min_match=60, success_notes=""),
+         min_match=60, success_notes=""),
     dict(id="job-5", employer_id=None, company="Indus Media Co.", title="Marketing Trainee", role_id="marketing",
          location="Gujrat", mode="On-site", level="Internship", type="Internship", days=1,
          description="Support campaign planning, social content and performance tracking for regional brands.",
          skills=[("Marketing", 3), ("Communication", 2), ("Teamwork", 1)],
-         min_score=55, min_match=50, success_notes=""),
+         min_match=50, success_notes=""),
 ]
 
 # (id, job_id, candidate_id, days ago)

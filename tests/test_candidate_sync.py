@@ -141,16 +141,16 @@ def test_session_roles_and_validation(client, employer):
 
 # ---------- the point of it all ----------
 
-def test_synced_candidate_gets_a_real_suitability_score(client, employer):
-    """A fresh candidate scores 0%; after syncing profile and sessions the employer sees the
-    same numbers as test_employer's hand-built Ayesha."""
+def test_synced_candidate_gets_a_real_cv_match(client, employer):
+    """A fresh candidate matches 0%; after syncing the profile the employer sees the CV match.
+    The synced sessions are stored for the candidate but never appear in the employer's view."""
     job = create_job(client, employer[1])
     user, headers = signup(client, candidate_payload())
     assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=headers).status_code == 201
 
     url = f"/api/jobs/{job['id']}/candidates"
     before = client.get(url, headers=employer[1]).json()["candidates"][0]
-    assert before["fit"]["total"] == 0 and before["sessions"] == [] and before["cvSummary"] is None
+    assert before["match"]["percentage"] == 0 and before["cvSummary"] is None
 
     assert client.put("/api/profile", json=PROFILE, headers=headers).status_code == 200
     for days, scores in AYESHA_SESSIONS:
@@ -158,14 +158,14 @@ def test_synced_candidate_gets_a_real_suitability_score(client, employer):
 
     res = client.get(url, headers=employer[1])
     entry = res.json()["candidates"][0]
-    assert {f["key"]: f["value"] for f in entry["fit"]["factors"]} == {"cv": 90, "interview": 69, "consistency": 84}
-    assert entry["fit"]["total"] == 80
-    assert entry["fit"]["weak"] == ["Testing"]
+    assert entry["match"]["percentage"] == 90
+    assert [s["name"] for s in entry["match"]["missing"]] == ["Testing"]
     assert entry["cvSummary"] == {"topDegree": "BS Computer Science", "experienceYears": 1.5, "projectCount": 2}
-    assert len(entry["sessions"]) == 3
-    assert "eyeContact" not in res.text  # video indicators stay private
+    assert set(entry) == {"application", "candidate", "cvSummary", "match"}
+    assert "session" not in res.text.lower() and "eyeContact" not in res.text
 
     # turning sharing off through the profile hides the candidate again
     assert client.put("/api/profile", json={**PROFILE, "shareWithEmployers": False}, headers=headers).status_code == 200
     body = client.get(url, headers=employer[1]).json()
     assert body["candidates"] == [] and body["hidden"] == 1
+

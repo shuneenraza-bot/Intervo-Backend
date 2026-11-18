@@ -7,7 +7,7 @@ from app.config import settings
 from app.models import Domain, EvaluationCriterion, JobRole, QuestionTemplate, RoleSkill, ScoringRules, Skill
 from app.services import ai
 from app.services.ai.base import LLMProvider
-from app.services.suitability import js_round
+from app.services.matching import js_round
 from tests.conftest import candidate_payload
 
 SKILLS = ["React", "JavaScript", "CSS", "Python", "Communication"]

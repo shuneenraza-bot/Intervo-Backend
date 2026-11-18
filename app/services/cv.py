@@ -97,7 +97,7 @@ def build_cv(llm: LLMCV, text: str, skills: list[dict]) -> ParsedCV:
 
 
 def _summary_for_employers(cv: ParsedCV) -> dict:
-    """The small CV summary employers' suitability scores read (no contact details, no text)."""
+    """The small CV summary employers' CV match reads (no contact details, no text)."""
     return {
         "education": [{"degree": e.degree, "institution": e.institution} for e in cv.education],
         "experienceYears": cv.experience_years,
@@ -212,18 +212,8 @@ def match(db: Session, user: User, body: MatchIn) -> MatchOut:
     result = cv_rules.match_skills(cv.skills, required, load_skills(db))
     checks = []
     if jd is not None:
-        if jd.min_years > 0:
-            checks.append({
-                "key": "experience", "label": "Experience",
-                "required": f"{jd.min_years}+ years", "actual": f"{cv.experience_years:g} years",
-                "met": cv.experience_years >= jd.min_years or jd.fresher_friendly,
-            })
-        if jd.education:
-            need = cv_rules.education_level(jd.education)
-            have = max((cv_rules.education_level(e.degree) for e in cv.education), default=0)
-            checks.append({
-                "key": "education", "label": "Education", "required": jd.education,
-                "actual": next((e.degree for e in cv.education if cv_rules.education_level(e.degree) == have and e.degree), "Not found"),
-                "met": need == 0 or have >= need,
-            })
+        checks = cv_rules.requirement_checks(
+            {"min_years": jd.min_years, "education": jd.education, "fresher_friendly": jd.fresher_friendly},
+            cv.experience_years, [e.degree for e in cv.education],
+        )
     return MatchOut.model_validate({**result, "checks": checks})

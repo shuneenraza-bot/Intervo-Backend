@@ -4,7 +4,7 @@ REST API and PostgreSQL database for **Intervo**, an AI-assisted interview coach
 
 Final Year Project, Department of Software Engineering, University of Gujrat.
 
-Intervo helps a candidate prepare for interviews: it reads their CV, shows the skill gap against a target role or job description, runs mock interviews in text, voice or video, and tracks weak skills over time. Employers post jobs and see applicants ranked by an explainable suitability score, using only the evidence each candidate agreed to share. An admin configures the roles, skills, questions and scoring rules.
+Intervo helps a candidate prepare for interviews: it reads their CV, shows the skill gap against a target role or job description, runs mock interviews in text, voice or video, and tracks weak skills over time. Employers post jobs and see applicants ranked by how well their CV skills match the job, only for candidates who agreed to share. Employers never see interview scores. An admin configures the roles, skills, questions and scoring rules.
 
 This repository is the server side. The React app is in **[Intervo-Frontend](https://github.com/shuneenraza-bot/Intervo-Frontend)**.
 
@@ -36,8 +36,8 @@ Status at the 30% evaluation. "Where it runs" matters because part of the system
 | 6 | Speech to text | Spoken answers become a transcript | Browser (Web Speech API) | ✅ Browser · ⏳ Whisper |
 | 7 | Presentation cues in video mode | Eye contact and expressiveness from face landmarks | Browser (MediaPipe) | ✅ Done |
 | 8 | Progress tracking | Score history per skill and persistent weakness detection | Browser; session scores are also saved to PostgreSQL | ✅ Done |
-| 9 | Employer module | Job postings with weighted skills, applications with consent, ranked candidates with an explainable suitability score | Backend | ✅ Done |
-| 10 | Admin configuration | Domains, roles, skills, question templates, criteria and rules | Tables and seed data on backend, read through `GET /api/config`; editing screens save in the browser | ✅ Read from backend · ⏳ admin write endpoints |
+| 9 | Employer module | Job postings with weighted skills, applications with consent, applicants ranked by CV skill match only (never interview scores) | Backend | ✅ Done |
+| 10 | Admin configuration | Domains, roles, skills, question templates, criteria and rules | Admin-only CRUD under `/api/admin/*`; every change applies on the next request, nothing is cached | Backend | ✅ Done |
 | 11 | Persistent storage | 14-table PostgreSQL schema with migrations | Backend | ✅ Done |
 | 12 | Deployment | Hosted demo | Not started | ⏳ Planned |
 
@@ -57,7 +57,7 @@ flowchart LR
 
     subgraph Server["FastAPI server"]
         API["REST API under /api<br/>JWT auth, role checks"]
-        SVC["Services<br/>auth, face matching, jobs, suitability score"]
+        SVC["Services<br/>auth, face matching, jobs, CV match, admin configuration"]
         ORM["SQLAlchemy 2.0 + Alembic"]
         API --> SVC --> ORM
     end
@@ -171,13 +171,14 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 ### Done
 
 - **Authentication on the real backend.** Sign up, two-step sign in with a password **or** Face ID, JWT sessions, argon2 hashes, lockout after repeated failures.
-- **Employer module on the real backend.** Create, edit, close and reopen job postings with weighted skills and success criteria. Candidates apply with consent. Employers see applicants ranked by an explainable suitability score and can shortlist or decline.
-- **Candidate sync.** A candidate's skills, CV summary and interview scores are saved to PostgreSQL so the ranking uses real data.
+- **Employer module on the real backend.** Create, edit, close and reopen job postings with weighted skills and a minimum CV match. Candidates apply with consent. Employers see applicants ranked by CV skill match (matched, partial and missing skills, experience and education checks, a short CV summary) and can shortlist or decline. No interview data reaches employers.
+- **Admin configuration on the real backend.** Admins manage domains, roles, skills, question templates, evaluation criteria, scoring rules and see users and counts, all validated and saved to PostgreSQL (`/api/admin/*`). The interview engine, CV matching, evaluation and the employer list read configuration from the database on every request, so changes apply immediately.
+- **Candidate sync.** A candidate's skills and CV summary are saved to PostgreSQL so the ranking uses real data (their session scores are kept for the candidate's own progress, not for employers).
 - **CV analyzer** (frontend): PDF, DOCX or pasted text, skill extraction, weighted skill-gap against a role or job description.
 - **Mock interviews** (frontend): text, voice and video, with follow-up questions and presentation cues.
 - **Dashboards** (frontend): candidate overview and progress, employer hiring overview, admin configuration.
-- **Database.** 14 tables with constraints and one Alembic migration, a seed script and an [ERD](docs/ERD.md).
-- **Tests.** 46 automated API tests: sign up, sign in, Face ID, lockout, jobs, applications, ranking and privacy rules.
+- **Database.** 14 tables with constraints and Alembic migrations, a seed script and an [ERD](docs/ERD.md).
+- **Tests.** 150 automated API tests: sign up, sign in, Face ID, lockout, jobs, applications, CV-only ranking and privacy rules, the interview engine and the admin endpoints.
 
 ### Next steps
 
@@ -185,10 +186,9 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 2. Move CV parsing to the server (`POST /api/cv/analyze`, `POST /api/jd/parse`) with Gemini-assisted extraction.
 3. Send recorded audio to Whisper for transcription instead of relying on the browser.
 4. Serve interviews from the server (`POST /api/interview/evaluate`, `GET /api/sessions`) so history follows the candidate across devices.
-5. Add admin write endpoints so configuration changes are saved in PostgreSQL and apply to every user.
-6. Add endpoints to delete an account and its history.
-7. Replace the Face ID matcher with a face-embedding model and add password reset.
-8. Deploy, then run user testing with students.
+5. Add endpoints to delete an account and its history.
+6. Replace the Face ID matcher with a face-embedding model and add password reset.
+7. Deploy, then run user testing with students.
 
 ## Known limitations
 
@@ -198,7 +198,7 @@ These are stated plainly so the evaluation reflects what is really built.
 - **Face matching is a prototype.** The browser measures ratios between face landmarks and the server compares them with a mean-difference formula against a threshold. The blink check stops a printed photo, but this is not a trained face-recognition model and has not been measured for false accepts. It should not be the only protection for a real account; the password always remains available.
 - **CV parsing and interviews still run in the browser.** The server has no `/cv`, `/jd` or `/interview` endpoints yet. Answer text and the full CV stay in the browser's `localStorage`, so that history does not move to another browser or device. Only skills, a CV summary and per-answer scores (with the video cues) reach the database.
 - **No account deletion endpoint yet.** "Delete history" and "Delete account" in the app clear the browser copy only. The rows in PostgreSQL stay until a delete endpoint is added. The sharing switch is enforced on the server.
-- **Admin edits are saved in the browser.** The admin screens change the configuration in `localStorage`. The employer pages read configuration from PostgreSQL, so an admin edit does not yet change the server-side ranking.
+- **Admin screens need the `admin` module.** Without `admin` in the frontend's `VITE_BACKEND_MODULES` the admin console edits only the browser's copy. Employer experience and education checks are read from the job description text (for example "2+ years"), not from separate job fields.
 - **Speech to text depends on the browser.** Voice and video modes use the Web Speech API, which works in Chrome and Edge.
 - **Rate limiting is per account, in the database.** There is no IP-based limiting, email verification or password reset yet.
 - **Not deployed.** The system runs on localhost.
@@ -217,6 +217,11 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | PUT | `/api/auth/face` | signed in | Enrol or replace Face ID. Body: `{ "template": { "v": 2, "method": "landmarks", "features": [...] } }` |
 | DELETE | `/api/auth/face` | signed in | Remove Face ID |
 | GET | `/api/config` | signed in | Domains, skills, roles, questions, criteria and rules |
+| GET, POST | `/api/admin/domains`, `/roles`, `/skills`, `/questions` | admin | List and create. Skills have `aliases`, `related`, `tip`; roles have weighted skills (1 to 3); questions have `skill`, `type`, `text`, `keywords`, `followUp` |
+| PUT, DELETE | `/api/admin/domains/{id}`, `/roles/{id}`, `/skills/{id}`, `/questions/{id}` | admin | Edit or delete. `404` unknown id, `409` duplicate name or still in use (for example `Skill is used by a role`) |
+| GET, PUT | `/api/admin/criteria` | admin | Weight 1 to 3 and `enabled` per criterion |
+| GET, PUT | `/api/admin/rules` | admin | `weakThreshold`, `weakMinSessions`, `followUpBelow`, `defaultQuestions`, `faceThreshold`, each range-checked |
+| GET | `/api/admin/users`, `/api/admin/stats` | admin | Accounts (no password hashes or face templates) and the counts for the overview |
 | GET | `/api/jobs` | signed in | `{ jobs, applications }`. Open jobs; employers also get their own closed jobs, `applicantCount` and the applications on their jobs |
 | POST | `/api/jobs` | employer | Create a job with weighted skills and success criteria |
 | PUT | `/api/jobs/{id}` | job owner | Replace a job |
@@ -224,7 +229,7 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | POST | `/api/jobs/{id}/apply` | candidate | `{ "consent": true }`. Consent also turns on profile sharing |
 | DELETE | `/api/jobs/{id}/apply` | candidate | Withdraw the application |
 | PATCH | `/api/applications/{id}` | job owner | `{ "status": "new" \| "shortlisted" \| "declined" }` |
-| GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by suitability |
+| GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by CV skill match. No interview data |
 | PUT | `/api/profile` | candidate | Save `{ skills, cv: { education, experienceYears, projects } \| null, shareWithEmployers }` |
 | POST | `/api/sessions` | candidate | Save a finished practice session's scores. Re-sending the same `id` returns the stored session with `200` |
 | POST | `/api/interviews` | candidate | Start an interview: `{ roleId \| jobId, mode, count }`. Questions are chosen on the server (weaknesses, CV gaps, role skills, one behavioural) with a `reason` each |
@@ -249,16 +254,16 @@ Walkthrough: [docs/run-an-interview.md](docs/run-an-interview.md). Selection and
 
 ### Candidate ranking and privacy
 
-`GET /api/jobs/{id}/candidates` returns `{ job, hidden, candidates }`, best fit first. The score (see `app/services/suitability.py`) combines three parts, weighted by `suitability` in the `scoring_rules` row (40 / 45 / 15 after seeding):
+`GET /api/jobs/{id}/candidates` returns `{ job, hidden, candidates }`. Employers get **only the CV skill match** (see `app/services/matching.py`), ranked by it, best first. Each candidate has:
 
-- **CV skill match**: the job's weighted skills against the candidate's skills. A related skill earns half the weight.
-- **Interview evidence**: the candidate's average scores on the job's skills, weighted the same way.
-- **Practice consistency**: the number of sessions and the improvement trend.
+- `match`: the job's weighted skills against the candidate's CV skills as `matched`, `partial` (a related skill earns half the weight) and `missing` lists, the `percentage`, `checks` for experience and education, and `meetsCriteria`, which is true when the percentage reaches the job's minimum CV match (`success.minMatch`). The checks are read from the job description ("2+ years", "Bachelor's degree") and compared with the CV.
+- `cvSummary`: top degree, years of experience and number of projects.
+- `candidate` (id, name, email) and `application`.
 
-Each result includes the three values, their weights and a one-line reason, so the employer can see why a candidate ranks where they do.
+Interview scores are never part of the response: no sessions, evidence, practice consistency, weak skills, session counts or answer text. Jobs have no minimum interview score.
 
 - Only applicants with `consent = true` on the application **and** `share_with_employers = true` on their profile are returned. Everyone else is only counted in `hidden`.
-- Answer text, video indicators, face templates and CV contact details are never sent to employers.
+- Interview data, answer text, video indicators, face templates and CV contact details are never sent to employers.
 
 ### Sign-in rules
 
@@ -302,7 +307,7 @@ app/
   models/        SQLAlchemy tables
   schemas/       Pydantic request and response models (camelCase JSON)
   routers/       HTTP endpoints
-  services/      Business logic: auth, password and JWT, face comparison, jobs, suitability
+  services/      Business logic: auth, password and JWT, face comparison, jobs, CV matching, admin configuration
 alembic/         Migrations
 docs/ERD.md      Entity relationship diagram, generated from the models
 scripts/

@@ -16,7 +16,6 @@ class WeightedSkill(CamelModel):
 
 
 class SuccessCriteria(CamelModel):
-    min_score: int = Field(default=0, ge=0, le=100)
     min_match: int = Field(default=0, ge=0, le=100)
     notes: str = ""
 
@@ -72,7 +71,7 @@ class JobOut(CamelModel):
             role_id=job.role_id, description=job.description, location=job.location, mode=job.mode,
             level=job.level, type=job.type, status=job.status, created_at=to_ms(job.created_at),
             skills=weighted_skills(job.skills),
-            success=SuccessCriteria(min_score=job.min_score, min_match=job.min_match, notes=job.success_notes),
+            success=SuccessCriteria(min_match=job.min_match, notes=job.success_notes),
             applicant_count=applicant_count,
         )
 

@@ -16,12 +16,12 @@ from app.models import (
     SessionAnswer,
     Skill,
 )
-from app.services.suitability import suitability
+from app.services.matching import cv_fit
 from tests.conftest import candidate_payload, employer_payload
 
 RULES = {
     "weakThreshold": 60, "weakMinSessions": 2, "followUpBelow": 55, "defaultQuestions": 5,
-    "faceThreshold": 0.55, "suitability": {"cv": 40, "interview": 45, "consistency": 15},
+    "faceThreshold": 0.55,
 }
 # name -> related skills (same as the seed data)
 SKILLS = {
@@ -36,7 +36,7 @@ JOB_SKILLS = [
 JOB = {
     "title": "Junior Frontend Developer", "roleId": "frontend", "description": "Build web pages.",
     "location": "Lahore", "mode": "Remote", "level": "Entry level", "type": "Full-time", "status": "open",
-    "skills": JOB_SKILLS, "success": {"minScore": 65, "minMatch": 60, "notes": "Explains component design."},
+    "skills": JOB_SKILLS, "success": {"minMatch": 60, "notes": "Explains component design."},
 }
 # Ayesha from the demo data: (days ago, [(skill, score)])
 AYESHA_SKILLS = ["React", "JavaScript", "HTML", "CSS", "Git", "Communication"]
@@ -125,46 +125,27 @@ def create_job(client, headers, **overrides) -> dict:
     return res.json()
 
 
-# ---------- suitability (pure function, numbers worked out by hand from lib.js) ----------
+# ---------- CV fit (pure function) ----------
 
-def test_suitability_matches_frontend_formula():
-    base = 1_700_000_000_000
-    sessions = [
-        {"id": f"s{days}", "date": base - days * 86_400_000,
-         "score": {12: 65, 5: 65, 1: 72}[days],
-         "answers": [{"skill": skill, "score": score} for skill, score in scores]}
-        for days, scores in AYESHA_SESSIONS
-    ]
-    config = {"rules": RULES, "skills": [{"name": n, "related": r} for n, r in SKILLS.items()]}
-    fit = suitability({"skills": JOB_SKILLS, "success": JOB["success"]}, {"skills": AYESHA_SKILLS}, sessions, config)
-
-    # CV: React, JavaScript, CSS, Git matched (9 of 10 weight); Testing missing
-    assert fit["cv"]["percentage"] == 90
-    assert [s["name"] for s in fit["cv"]["missing"]] == ["Testing"]
-    # Interview: (74*3 + 75*3 + 60*2 + 72*1 + 52*1) / 10 = 69.1
-    # Consistency: 40 + 3 sessions * 12 + average trend 8 = 84
-    assert {f["key"]: f["value"] for f in fit["factors"]} == {"cv": 90, "interview": 69, "consistency": 84}
-    assert {f["key"]: f["weight"] for f in fit["factors"]} == {"cv": 40, "interview": 45, "consistency": 15}
-    assert fit["total"] == 80  # (90*40 + 69*45 + 84*15) / 100 = 79.65
-    assert fit["avgScore"] == 67
-    assert fit["meetsCriteria"] is True
-    assert fit["weak"] == ["Testing"]  # two sessions, average 52
-    assert fit["factors"][0]["detail"] == "4 matched, 0 partial, 1 missing"
-    assert fit["factors"][1]["detail"] == "Scored on 5 of 5 required skills (100% coverage)"
-    assert fit["factors"][2]["detail"] == "3 sessions, average trend +8"
-    react = next(e for e in fit["evidence"] if e["name"] == "React")["perf"]
-    assert react == {"skill": "React", "scores": [64, 76, 82], "avg": 74, "sessions": 3, "latest": 82, "trend": 18, "weak": False}
+def test_cv_fit_matches_frontend_skill_match():
+    skill_config = [{"name": n, "related": r} for n, r in SKILLS.items()]
+    fit = cv_fit({"skills": JOB_SKILLS, "success": JOB["success"]}, {"skills": AYESHA_SKILLS}, skill_config)
+    # React, JavaScript, CSS, Git matched (9 of 10 weight); Testing missing
+    assert fit["percentage"] == 90
+    assert [s["name"] for s in fit["matched"]] == ["JavaScript", "React", "CSS", "Git"]
+    assert [s["name"] for s in fit["missing"]] == ["Testing"]
+    assert fit["partial"] == [] and fit["checks"] == []
+    assert fit["meetsCriteria"] is True  # 90 >= minMatch 60
+    assert set(fit) == {"matched", "partial", "missing", "percentage", "checks", "meetsCriteria"}
 
 
-def test_suitability_partial_match_and_no_sessions():
-    config = {"rules": RULES, "skills": [{"name": n, "related": r} for n, r in SKILLS.items()]}
-    fit = suitability({"skills": JOB_SKILLS, "success": JOB["success"]}, {"skills": ["TypeScript", "CSS"]}, [], config)
-    assert [(p["name"], p["via"]) for p in fit["cv"]["partial"]] == [("JavaScript", "TypeScript")]
-    assert fit["cv"]["percentage"] == 35  # CSS 2 + half of JavaScript 3, out of 10
-    assert fit["factors"][1]["detail"] == "No interview answers on this job's skills yet"
-    assert fit["factors"][2]["value"] == 0
-    assert fit["total"] == 14  # 35 * 40 / 100
-    assert fit["meetsCriteria"] is False
+def test_cv_fit_partial_match_and_minimum():
+    skill_config = [{"name": n, "related": r} for n, r in SKILLS.items()]
+    fit = cv_fit({"skills": JOB_SKILLS, "success": JOB["success"]}, {"skills": ["TypeScript", "CSS"]}, skill_config)
+    assert [(p["name"], p["via"]) for p in fit["partial"]] == [("JavaScript", "TypeScript")]
+    assert fit["percentage"] == 35  # CSS 2 + half of JavaScript 3, out of 10
+    assert fit["meetsCriteria"] is False  # 35 < 60
+    assert cv_fit({"skills": JOB_SKILLS, "success": {}}, None, skill_config)["meetsCriteria"] is True  # no minimum set
 
 
 # ---------- config ----------
@@ -180,7 +161,7 @@ def test_config_requires_sign_in_and_has_frontend_shape(client, employer):
     assert config["roles"] == [{"id": "frontend", "title": "Frontend Developer", "domainId": "tech",
                                 "skills": [{"name": "React", "weight": 3}, {"name": "CSS", "weight": 2}]}]
     assert config["criteria"] == [{"key": "relevance", "label": "Relevance", "weight": 2, "appliesTo": "all", "enabled": True}]
-    assert config["rules"]["suitability"] == {"cv": 40, "interview": 45, "consistency": 15}
+    assert "suitability" not in config["rules"]
 
 
 # ---------- jobs ----------
@@ -196,12 +177,12 @@ def test_employer_creates_and_edits_job(client, employer):
     assert job["success"] == JOB["success"]
 
     edited = {**job, "title": "Frontend Developer", "skills": [{"name": "React", "weight": 2}, {"name": "HTML", "weight": 1}],
-              "success": {"minScore": 70, "minMatch": 50, "notes": ""}}
+              "success": {"minMatch": 50, "notes": ""}}
     res = client.put(f"/api/jobs/{job['id']}", json=edited, headers=headers)
     assert res.status_code == 200, res.text
     assert res.json()["title"] == "Frontend Developer"
     assert res.json()["skills"] == [{"name": "React", "weight": 2}, {"name": "HTML", "weight": 1}]
-    assert res.json()["success"]["minScore"] == 70
+    assert res.json()["success"] == {"minMatch": 50, "notes": ""}  # no interview score on a job
 
     res = client.patch(f"/api/jobs/{job['id']}/status", json={"status": "closed"}, headers=headers)
     assert res.status_code == 200 and res.json()["status"] == "closed"
@@ -280,67 +261,81 @@ def test_apply_withdraw_and_status(client, db, employer, ayesha):
 
 # ---------- ranked candidates ----------
 
-def test_employer_sees_ranked_candidate_with_all_three_factors(client, employer, ayesha):
-    job = create_job(client, employer[1])
+def test_employer_sees_only_the_cv_match(client, employer, ayesha):
+    job = create_job(client, employer[1], description="We need 1+ years of experience. Bachelor degree in Computer Science.")
     assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=ayesha[1]).status_code == 201
 
     res = client.get(f"/api/jobs/{job['id']}/candidates", headers=employer[1])
     assert res.status_code == 200, res.text
     body = res.json()
-    assert body["job"]["id"] == job["id"]
-    assert body["hidden"] == 0
+    assert body["job"]["id"] == job["id"] and body["hidden"] == 0
+    assert set(body) == {"job", "hidden", "candidates"}
     assert len(body["candidates"]) == 1
 
     entry = body["candidates"][0]
+    # Exactly these keys: no sessions, profile, fit/factors, evidence or any interview score.
+    assert set(entry) == {"application", "candidate", "cvSummary", "match"}
     assert entry["candidate"] == {"id": ayesha[0]["id"], "name": "Ayesha Khan", "email": "ayesha@example.com"}
     assert entry["application"]["consent"] is True
 
-    fit = entry["fit"]
-    assert [f["key"] for f in fit["factors"]] == ["cv", "interview", "consistency"]
-    assert {f["key"]: f["value"] for f in fit["factors"]} == {"cv": 90, "interview": 69, "consistency": 84}
-    assert {f["key"]: f["weight"] for f in fit["factors"]} == {"cv": 40, "interview": 45, "consistency": 15}
-    assert all(f["label"] and f["detail"] for f in fit["factors"])
-    assert fit["total"] == 80
-    assert [s["name"] for s in fit["cv"]["matched"]] == ["JavaScript", "React", "CSS", "Git"]
-    assert [s["name"] for s in fit["cv"]["missing"]] == ["Testing"]
-    assert len(fit["evidence"]) == 5 and all("perf" in e for e in fit["evidence"])
-    assert fit["meetsCriteria"] is True
-    assert fit["weak"] == ["Testing"]
-
+    match = entry["match"]
+    assert set(match) == {"matched", "partial", "missing", "percentage", "checks", "meetsCriteria"}
+    assert match["percentage"] == 90
+    assert match["matched"] == [
+        {"name": "JavaScript", "weight": 3}, {"name": "React", "weight": 3},
+        {"name": "CSS", "weight": 2}, {"name": "Git", "weight": 1},
+    ]
+    assert match["missing"] == [{"name": "Testing", "weight": 1}]
+    assert match["meetsCriteria"] is True
+    assert match["checks"] == [
+        {"key": "experience", "label": "Experience", "required": "1+ years", "actual": "1.5 years", "met": True},
+        {"key": "education", "label": "Education", "required": "Bachelor degree in Computer Science",
+         "actual": "BS Computer Science", "met": True},
+    ]
     assert entry["cvSummary"] == {"topDegree": "BS Computer Science", "experienceYears": 1.5, "projectCount": 2}
-    assert entry["profile"]["skills"] == AYESHA_SKILLS
-    assert entry["profile"]["cv"]["education"] == [{"degree": "BS Computer Science"}]
-    assert len(entry["profile"]["cv"]["projects"]) == 2
-    assert len(entry["sessions"]) == 3
 
-    # Privacy: no answer text, no face data, no contact details, no password hash
+    # Her three practice sessions exist in the database, but nothing from them is in the response.
     assert SECRET_ANSWER not in res.text
-    assert all(a["answer"] == "" and a["followUp"] is None and a["indicators"] is None
-               for s in entry["sessions"] for a in s["answers"])
-    for forbidden in ("face", "template", "eyeContact", "passwordHash", "password_hash", "0300-1234567", "phone"):
+    lowered = res.text.lower()
+    for word in ("session", "interview", "evidence", "consistency", "suitability", "avgscore", "factors", "perf",
+                 "weak", "minscore", "indicators", "followup", "trend", "eyecontact"):
+        assert word not in lowered, word
+    for forbidden in ("face", "template", "passwordHash", "password_hash", "0300-1234567", "phone"):
         assert forbidden not in res.text
 
 
-def test_candidates_are_ranked_best_first(client, db, employer, ayesha):
+def test_requirement_checks_fail_when_cv_falls_short(client, employer, ayesha):
+    job = create_job(client, employer[1], description="Requires 5+ years. Master degree preferred.")
+    client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=ayesha[1])
+    checks = client.get(f"/api/jobs/{job['id']}/candidates", headers=employer[1]).json()["candidates"][0]["match"]["checks"]
+    assert [(c["key"], c["met"]) for c in checks] == [("experience", False), ("education", False)]
+
+
+def test_candidates_are_ranked_by_cv_match(client, db, employer, ayesha):
     job = create_job(client, employer[1])
     bilal, bilal_headers = signup(client, candidate_payload(email="bilal@example.com", name="Bilal Ahmed"))
     db.get(CandidateProfile, bilal["id"]).skills = ["TypeScript", "CSS"]
     db.commit()
-    add_sessions(db, bilal["id"], [(3, [("React", 46), ("CSS", 60)])])
+    # Bilal has excellent interview scores, which must not help him: only the CV match ranks.
+    add_sessions(db, bilal["id"], [(3, [("React", 99), ("CSS", 99)])])
 
-    # the weaker candidate applies first, so order must come from the score
+    # the weaker CV applies first, so order must come from the match
     for headers in (bilal_headers, ayesha[1]):
         assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=headers).status_code == 201
 
     body = client.get(f"/api/jobs/{job['id']}/candidates", headers=employer[1]).json()
-    names = [c["candidate"]["name"] for c in body["candidates"]]
-    totals = [c["fit"]["total"] for c in body["candidates"]]
-    assert names == ["Ayesha Khan", "Bilal Ahmed"]
-    assert totals == sorted(totals, reverse=True) and totals[0] > totals[1]
-    weaker = body["candidates"][1]["fit"]
-    assert [(p["name"], p["via"]) for p in weaker["cv"]["partial"]] == [("JavaScript", "TypeScript")]
-    assert weaker["meetsCriteria"] is False
+    assert [c["candidate"]["name"] for c in body["candidates"]] == ["Ayesha Khan", "Bilal Ahmed"]
+    assert [c["match"]["percentage"] for c in body["candidates"]] == [90, 35]
+    weaker = body["candidates"][1]["match"]
+    assert [(p["name"], p["via"]) for p in weaker["partial"]] == [("JavaScript", "TypeScript")]
+    assert weaker["meetsCriteria"] is False  # 35 < minMatch 60
     assert body["candidates"][1]["cvSummary"] is None  # no CV uploaded
+
+
+def test_job_has_no_interview_score_field(client, employer):
+    job = create_job(client, employer[1])
+    assert job["success"] == {"minMatch": 60, "notes": "Explains component design."}
+    assert "minScore" not in client.get("/api/jobs", headers=employer[1]).text
 
 
 def test_another_employer_gets_403(client, employer, other_employer, ayesha):

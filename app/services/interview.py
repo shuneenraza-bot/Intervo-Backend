@@ -35,7 +35,7 @@ from app.services import ai
 from app.services.ai import RuleBasedProvider, run_json_task
 from app.services.ai.prompts import RUBRIC, evaluation_prompt, follow_up_prompt, question_prompt
 from app.services.catalog import load_rules, load_skills, weighted_skills
-from app.services.suitability import DEFAULT_RULES, average, js_round, match_skills, skill_performance
+from app.services.matching import DEFAULT_RULES, average, js_round, match_skills, skill_performance
 
 log = logging.getLogger("intervo.interview")
 DEFAULTS = {**DEFAULT_RULES, "followUpBelow": 55, "defaultQuestions": 5}

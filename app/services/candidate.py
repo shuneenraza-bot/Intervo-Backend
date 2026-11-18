@@ -1,5 +1,5 @@
-"""Candidate-owned data that the employer's suitability score reads: the profile
-(skills, CV summary, sharing switch) and finished practice sessions."""
+"""Candidate-owned data: the profile (skills, CV summary, sharing switch) and finished practice
+sessions. Employers read only the skills and CV summary, never the sessions."""
 
 from datetime import datetime, timezone
 

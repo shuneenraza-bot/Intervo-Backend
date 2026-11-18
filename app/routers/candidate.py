@@ -14,7 +14,7 @@ Candidate = Annotated[User, Depends(require_role("candidate"))]
 
 @router.put("/profile", response_model=ProfileOut)
 def save_profile(body: ProfileIn, user: Candidate, db: DbSession):
-    """Saves the skills, CV summary and sharing switch the employer's suitability score reads."""
+    """Saves the skills, CV summary and sharing switch the employer's CV match reads."""
     return candidate_service.save_profile(db, user, body)
 
 

@@ -125,7 +125,6 @@ erDiagram
         varchar(60) type
         text description
         varchar(20) status
-        int min_score
         int min_match
         text success_notes
         timestamptz created_at
@@ -176,6 +175,7 @@ erDiagram
         jsonb keywords "nullable"
         jsonb tips "nullable"
         varchar(20) provider "nullable"
+        varchar(10) answer_source
         boolean needs_follow_up
         text follow_up_question "nullable"
         timestamptz answered_at "nullable"
@@ -196,9 +196,9 @@ erDiagram
 | `role_skills` | Admin configuration | Which skills a role template needs and how important each one is (weight 1 to 3). |
 | `question_templates` | Admin configuration | An interview question for one skill, technical or behavioral, with expected keywords and a follow-up question. |
 | `evaluation_criteria` | Admin configuration | A rubric criterion for scoring answers (relevance, clarity, STAR structure and so on) with its weight. |
-| `scoring_rules` | Admin configuration | A single row of admin-set rules: weakness threshold, follow-up trigger, Face ID match threshold and suitability weights. |
+| `scoring_rules` | Admin configuration | A single row of admin-set rules: weakness threshold, follow-up trigger, Face ID match threshold and the scoring thresholds. |
 | `jobs` | Jobs | A job posting by an employer, with success criteria (minimum interview score and minimum CV match). |
-| `job_skills` | Jobs | The skills a job posting requires and their weights (1 to 3), used for the CV match and suitability score. |
+| `job_skills` | Jobs | The skills a job posting requires and their weights (1 to 3), used for the CV match. |
 | `applications` | Jobs | A candidate's application to a job, with their consent to share evidence and the employer's decision. |
 | `interview_sessions` | Interviews | One finished mock interview: candidate, role, mode (text, voice or video), overall score and date. |
 | `session_answers` | Interviews | One question inside a session: the skill tested, score, per-criterion scores, video cues and follow-up. |

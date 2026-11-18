@@ -12,18 +12,16 @@ from app.db import new_id
 from app.models import (
     Application,
     CandidateProfile,
-    InterviewSession,
     Job,
     JobRole,
     JobSkill,
-    SessionAnswer,
     Skill,
     User,
 )
-from app.schemas.base import to_ms
 from app.schemas.jobs import ApplicationOut, JobIn, JobOut, JobsResponse
-from app.services.catalog import load_rules, load_skills
-from app.services.suitability import cv_summary, suitability
+from app.services import cv_rules
+from app.services.catalog import load_skills
+from app.services.matching import cv_fit, cv_summary
 
 _JOB_OPTIONS = (selectinload(Job.skills).selectinload(JobSkill.skill),)
 
@@ -96,7 +94,6 @@ def _apply_job_fields(db: Session, job: Job, body: JobIn) -> None:
     job.level = body.level
     job.type = body.type
     job.status = body.status
-    job.min_score = body.success.min_score
     job.min_match = body.success.min_match
     job.success_notes = body.success.notes
 
@@ -152,7 +149,7 @@ def apply_to_job(db: Session, job_id: str, candidate: User, consent: bool) -> Ap
     application = Application(id=new_id("app"), job_id=job_id, candidate_id=candidate.id, consent=consent, status="new")
     db.add(application)
     if consent:
-        # Consent means "share my CV match and interview results with this employer".
+        # Consent means "share my CV skill match with this employer" (never interview results).
         profile = db.get(CandidateProfile, candidate.id)
         if profile is None:
             profile = CandidateProfile(user_id=candidate.id, skills=[])
@@ -192,96 +189,48 @@ def set_application_status(db: Session, application_id: str, employer: User, new
 
 # ---------- ranked candidates ----------
 
-def _session_for_employer(session: InterviewSession) -> dict:
-    """A Session as API.md describes it, minus anything private: answer text, follow-up
-    answers and video (face) indicators are never sent to employers."""
-    return {
-        "id": session.id,
-        "userId": session.candidate_id,
-        "roleId": session.role_id,
-        "roleTitle": session.role.title if session.role else "",
-        "mode": session.mode,
-        "date": to_ms(session.date),
-        "score": session.score,
-        "answers": [
-            {
-                "questionId": a.question_id,
-                "question": a.question,
-                "skill": a.skill.name if a.skill else "",
-                "type": a.type,
-                "score": a.score,
-                "criteria": a.criteria or {},
-                "answer": "",
-                "reason": a.reason,
-                "followUp": None,
-                "indicators": None,
-            }
-            for a in session.answers
-        ],
-    }
-
-
-def _profile_for_employer(profile: CandidateProfile, summary: dict | None) -> dict:
-    """Skills plus the three CV facts the employer screen shows; no contact details or CV text."""
-    out = {"skills": profile.skills or [], "shareWithEmployers": True, "roleId": profile.target_role_id}
-    if summary:
-        out["cv"] = {
-            "education": [{"degree": summary["topDegree"]}] if summary["topDegree"] else [],
-            "experienceYears": summary["experienceYears"],
-            "projects": [{"name": p.get("name", "")} for p in (profile.cv.get("projects") or [])],
-        }
-    return out
+def _requirement_checks(job: JobOut, summary: dict | None, profile: CandidateProfile) -> list[dict]:
+    """Experience / education checks. The job has no separate requirement fields, so what the
+    description asks for ("2+ years", "Bachelor's in ...") is read the same way the candidate's
+    job-description match reads it, and compared with the CV summary."""
+    jd = cv_rules.parse_jd(job.description, [])
+    degrees = [e.get("degree") or "" for e in (profile.cv or {}).get("education") or []]
+    return cv_rules.requirement_checks(jd, (summary or {}).get("experienceYears") or 0, degrees)
 
 
 def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
-    """Applicants for one job, best fit first. Evidence is returned only for applicants who
-    consented on this application AND share their profile with employers; the rest are
-    counted in `hidden` with no details."""
+    """Applicants for one job, best CV match first. Employers get the CV skill match, the
+    requirement checks and a short CV summary, and never any interview or practice data.
+    Details are returned only for applicants who consented on this application AND share
+    their profile with employers; the rest are counted in `hidden` with no details."""
     job = get_owned_job(db, job_id, employer)
-    job_out = JobOut.from_job(job).model_dump(by_alias=True)
+    job_out = JobOut.from_job(job)
+    job_dict = job_out.model_dump(by_alias=True)
 
     applications = db.scalars(
         select(Application)
         .where(Application.job_id == job_id)
         .options(selectinload(Application.candidate).selectinload(User.profile))
+        .order_by(Application.created_at)
     ).all()
     visible = [
         a for a in applications
         if a.consent and a.candidate.profile is not None and a.candidate.profile.share_with_employers
     ]
-    job_out["applicantCount"] = len(applications)
+    job_dict["applicantCount"] = len(applications)
 
-    sessions_by_candidate: dict[str, list[dict]] = {a.candidate_id: [] for a in visible}
-    if visible:
-        sessions = db.scalars(
-            select(InterviewSession)
-            .where(
-                InterviewSession.candidate_id.in_(sessions_by_candidate),
-                InterviewSession.status == "completed",
-            )
-            .options(
-                selectinload(InterviewSession.answers).selectinload(SessionAnswer.skill),
-                selectinload(InterviewSession.role),
-            )
-            .order_by(InterviewSession.date)
-        )
-        for s in sessions:
-            sessions_by_candidate[s.candidate_id].append(_session_for_employer(s))
-
-    config = {"rules": load_rules(db), "skills": load_skills(db)}
+    skill_config = load_skills(db)  # read on every request, so admin edits apply immediately
     candidates = []
     for application in visible:
         user, profile = application.candidate, application.candidate.profile
-        sessions = sessions_by_candidate[user.id]
         summary = cv_summary(profile.cv)
         candidates.append({
             "application": ApplicationOut.from_application(application).model_dump(by_alias=True),
             "candidate": {"id": user.id, "name": user.name, "email": user.email},
-            "profile": _profile_for_employer(profile, summary),
             "cvSummary": summary,
-            "sessions": sessions,
-            "fit": suitability(job_out, {"skills": profile.skills or []}, sessions, config),
+            "match": cv_fit(job_dict, {"skills": profile.skills or []}, skill_config,
+                            _requirement_checks(job_out, summary, profile)),
         })
-    candidates.sort(key=lambda c: c["fit"]["total"], reverse=True)
+    candidates.sort(key=lambda c: c["match"]["percentage"], reverse=True)  # stable: ties keep application order
 
-    return {"job": job_out, "hidden": len(applications) - len(visible), "candidates": candidates}
+    return {"job": job_dict, "hidden": len(applications) - len(visible), "candidates": candidates}

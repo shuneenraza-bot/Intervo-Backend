@@ -55,7 +55,7 @@ class CandidateProfile(TimestampMixin, Base):
     skills: Mapped[list[str]] = mapped_column(JSONType, default=list)  # skill names
     cv: Mapped[dict[str, Any] | None] = mapped_column(JSONType)  # ParsedCV
     # Full parsed CV from POST/PUT /api/cv (contact details included; never shown to employers).
-    # `cv` above stays the small summary employers' suitability scores read.
+    # `cv` above stays the small summary employers' CV match reads.
     parsed_cv: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
     cv_text: Mapped[str | None] = mapped_column(Text)  # extracted text only, never the raw file
     cv_file_name: Mapped[str | None] = mapped_column(String(255))
