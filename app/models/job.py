@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db import Base, TimestampMixin
+from app.db import Base, JSONType, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.catalog import JobRole, Skill
@@ -87,6 +87,12 @@ class Application(TimestampMixin, Base):
     )
     consent: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     status: Mapped[str] = mapped_column(String(30), default="applied", server_default="applied")
+    # What the employer received: the candidate's CV as it was when they applied. Later CV changes
+    # never touch it. {"parsed": ParsedCV, "summary": {...}, "skills": [...], "fileName", "uploadedAt"}
+    cv_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    cv_file_id: Mapped[str | None] = mapped_column(
+        String(40), ForeignKey("cv_files.id", ondelete="SET NULL"), index=True
+    )
 
     job: Mapped[Job] = relationship(back_populates="applications")
     candidate: Mapped[User] = relationship()

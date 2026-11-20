@@ -94,6 +94,7 @@ def ayesha(client, db):
         "experience": [], "experienceYears": 1.5,
         "projects": [{"name": "Portfolio", "details": "", "tech": ["React"]}, {"name": "Shop", "details": "", "tech": []}],
     }
+    profile.parsed_cv = {**profile.cv, "skills": AYESHA_SKILLS, "summary": "Frontend developer."}
     db.commit()
     add_sessions(db, user["id"], AYESHA_SESSIONS)
     return user, headers
@@ -314,7 +315,9 @@ def test_requirement_checks_fail_when_cv_falls_short(client, employer, ayesha):
 def test_candidates_are_ranked_by_cv_match(client, db, employer, ayesha):
     job = create_job(client, employer[1])
     bilal, bilal_headers = signup(client, candidate_payload(email="bilal@example.com", name="Bilal Ahmed"))
-    db.get(CandidateProfile, bilal["id"]).skills = ["TypeScript", "CSS"]
+    bilal_profile = db.get(CandidateProfile, bilal["id"])
+    bilal_profile.skills = ["TypeScript", "CSS"]
+    bilal_profile.parsed_cv = {"skills": ["TypeScript", "CSS"]}
     db.commit()
     # Bilal has excellent interview scores, which must not help him: only the CV match ranks.
     add_sessions(db, bilal["id"], [(3, [("React", 99), ("CSS", 99)])])
@@ -329,7 +332,7 @@ def test_candidates_are_ranked_by_cv_match(client, db, employer, ayesha):
     weaker = body["candidates"][1]["match"]
     assert [(p["name"], p["via"]) for p in weaker["partial"]] == [("JavaScript", "TypeScript")]
     assert weaker["meetsCriteria"] is False  # 35 < minMatch 60
-    assert body["candidates"][1]["cvSummary"] is None  # no CV uploaded
+    assert body["candidates"][1]["cvSummary"] is None  # no CV summary on file
 
 
 def test_job_has_no_interview_score_field(client, employer):

@@ -23,7 +23,7 @@ def upload_cv(user: Candidate, db: DbSession, file: Annotated[UploadFile, File(d
     data = file.file.read(MAX_FILE_BYTES + 1)  # never read more than the limit allows
     file_name = os.path.basename((file.filename or "cv").replace("\\", "/"))[:255] or "cv"
     text = extract_text(file_name, data)
-    return cv_service.analyze_and_save(db, user, text, file_name)
+    return cv_service.analyze_and_save(db, user, text, file_name, data)
 
 
 @router.get("/cv", response_model=CVResponse)

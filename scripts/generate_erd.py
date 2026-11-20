@@ -20,7 +20,7 @@ OUTPUT = Path(__file__).resolve().parent.parent / "docs" / "ERD.md"
 
 # Diagram order, grouped the way the README groups them.
 GROUPS = {
-    "Accounts": ["users", "candidate_profiles"],
+    "Accounts": ["users", "candidate_profiles", "cv_files"],
     "Admin configuration": [
         "domains", "job_roles", "skills", "role_skills",
         "question_templates", "evaluation_criteria", "scoring_rules",
@@ -32,6 +32,7 @@ GROUPS = {
 DESCRIPTIONS = {
     "users": "An account: candidate, employer or admin. Holds the argon2 password hash, the optional Face ID landmark template and the sign-in attempt counters.",
     "candidate_profiles": "One per candidate: confirmed skills, parsed CV summary, target role and the consent switch for sharing results with employers.",
+    "cv_files": "An uploaded original CV (PDF, DOCX or TXT): file name, type, size and upload date. The bytes are in storage/cvs/ under a random name. The candidate's latest file is current; older ones stay only while an application still holds them.",
     "domains": "A career field (Technology, Business, Marketing, HR & Finance) that groups job roles.",
     "job_roles": "A role template inside a domain, such as Frontend Developer, used for skill-gap analysis and interviews.",
     "skills": "The skill library: name, aliases used to detect the skill in a CV, related skills for partial matches and an improvement tip.",
@@ -41,7 +42,7 @@ DESCRIPTIONS = {
     "scoring_rules": "A single row of admin-set rules: weakness threshold, follow-up trigger, Face ID match threshold and the scoring thresholds.",
     "jobs": "A job posting by an employer, with success criteria (minimum interview score and minimum CV match).",
     "job_skills": "The skills a job posting requires and their weights (1 to 3), used for the CV match.",
-    "applications": "A candidate's application to a job: consent to share the CV match and the current status (applied, shortlisted, accepted, declined_by_candidate or not_progressing).",
+    "applications": "A candidate's application to a job: consent to share the CV, the current status (applied, shortlisted, accepted, declined_by_candidate or not_progressing) and a snapshot of the CV as it was when they applied, with a reference to that CV file.",
     "application_status_history": "One row per status change of an application, with the time, the employer's message and the candidate's note.",
     "notifications": "An in-app notification for one user (shortlisted, not progressing, accepted, declined) with the page it links to and when it was read.",
     "interview_sessions": "One finished mock interview: candidate, role, mode (text, voice or video), overall score and date.",
@@ -62,6 +63,9 @@ LABELS = {
     ("job_skills", "skill_id"): "is required by",
     ("applications", "job_id"): "receives",
     ("applications", "candidate_id"): "submits",
+    ("applications", "cv_file_id"): "was sent with",
+    ("cv_files", "user_id"): "uploads",
+    ("candidate_profiles", "cv_file_id"): "currently uses",
     ("application_status_history", "application_id"): "records",
     ("notifications", "user_id"): "receives",
     ("interview_sessions", "candidate_id"): "practises in",

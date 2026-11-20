@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import Field
 
 from app.schemas.base import CamelModel
+from app.schemas.cv import EducationModel, ExperienceModel, ProjectModel
 
 
 class RespondIn(CamelModel):
@@ -52,3 +53,40 @@ class NotificationOut(CamelModel):
 
 class UnreadCount(CamelModel):
     count: int
+
+
+class EmployerCVOut(CamelModel):
+    """The parsed CV an employer may read. No name, email, phone, LinkedIn or GitHub, and no
+    interview data."""
+
+    summary: str
+    skills: list[str]
+    other_skills: list[str]
+    education: list[EducationModel]
+    experience: list[ExperienceModel]
+    projects: list[ProjectModel]
+    certifications: list[str]
+    experience_years: float
+
+
+class CVFileInfo(CamelModel):
+    name: str
+    size: int
+    content_type: str
+    uploaded_at: int
+
+
+class ApplicantContact(CamelModel):
+    name: str
+    email: str
+    phone: str | None = None
+
+
+class ApplicationCV(CamelModel):
+    """`file` and `contact` appear only after the candidate accepts the shortlist."""
+
+    application_id: str
+    status: str
+    cv: EmployerCVOut
+    file: CVFileInfo | None = None
+    contact: ApplicantContact | None = None

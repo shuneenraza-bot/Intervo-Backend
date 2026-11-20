@@ -122,7 +122,9 @@ def test_accept_reveals_contacts_to_both(client, employer, ayesha):
 def test_contact_phone_is_null_without_a_cv(client, db, employer):
     from app.models import CandidateProfile
     user, headers = signup(client, candidate_payload(email="noncv@example.com", name="Noor Cv"))
-    db.get(CandidateProfile, user["id"]).skills = ["React"]
+    profile = db.get(CandidateProfile, user["id"])
+    profile.skills = ["React"]
+    profile.parsed_cv = {"skills": ["React"]}
     db.commit()
     job = create_job(client, employer[1])
     application = apply(client, job, headers)

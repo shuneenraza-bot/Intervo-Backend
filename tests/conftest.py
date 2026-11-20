@@ -63,6 +63,13 @@ def clean_tables(schema):
         session.commit()
 
 
+@pytest.fixture(autouse=True)
+def storage_dir(tmp_path, monkeypatch):
+    """CV files go to a temp folder, never the real storage/."""
+    monkeypatch.setattr(settings, "storage_dir", str(tmp_path / "storage"))
+    return tmp_path / "storage" / "cvs"
+
+
 @pytest.fixture
 def db():
     with TestingSession() as session:

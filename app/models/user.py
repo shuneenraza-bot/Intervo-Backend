@@ -10,6 +10,7 @@ from app.db import Base, JSONType, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.catalog import JobRole
+    from app.models.cv_file import CvFile
 
 
 class User(TimestampMixin, Base):
@@ -57,9 +58,13 @@ class CandidateProfile(TimestampMixin, Base):
     # Full parsed CV from POST/PUT /api/cv (contact details included; never shown to employers).
     # `cv` above stays the small summary employers' CV match reads.
     parsed_cv: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
-    cv_text: Mapped[str | None] = mapped_column(Text)  # extracted text only, never the raw file
+    cv_text: Mapped[str | None] = mapped_column(Text)  # extracted text; the original file is in cv_files
     cv_file_name: Mapped[str | None] = mapped_column(String(255))
     cv_provider: Mapped[str | None] = mapped_column(String(20))  # "gemini" or "rules"
+    # The current original file (cv_files). Only the latest upload is current.
+    cv_file_id: Mapped[str | None] = mapped_column(
+        String(40), ForeignKey("cv_files.id", ondelete="SET NULL"), index=True
+    )
     target_role_id: Mapped[str | None] = mapped_column(
         String(40), ForeignKey("job_roles.id", ondelete="SET NULL"), index=True
     )
@@ -68,3 +73,4 @@ class CandidateProfile(TimestampMixin, Base):
 
     user: Mapped[User] = relationship(back_populates="profile")
     target_role: Mapped[JobRole | None] = relationship()
+    cv_file: Mapped[CvFile | None] = relationship()

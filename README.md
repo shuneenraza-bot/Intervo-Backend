@@ -38,7 +38,7 @@ Status at the 30% evaluation. "Where it runs" matters because part of the system
 | 8 | Progress tracking | Score history per skill and persistent weakness detection | Browser; session scores are also saved to PostgreSQL | ✅ Done |
 | 9 | Employer module | Job postings with weighted skills, applications with consent, applicants ranked by CV skill match only (never interview scores) | Backend | ✅ Done |
 | 10 | Admin configuration | Domains, roles, skills, question templates, criteria and rules | Admin-only CRUD under `/api/admin/*`; every change applies on the next request, nothing is cached | Backend | ✅ Done |
-| 11 | Persistent storage | 14-table PostgreSQL schema with migrations | Backend | ✅ Done |
+| 11 | Persistent storage | 15-table PostgreSQL schema with migrations | Backend | ✅ Done |
 | 12 | Deployment | Hosted demo | Not started | ⏳ Planned |
 
 ## Architecture
@@ -178,7 +178,7 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 - **Mock interviews** (frontend): text, voice and video, with follow-up questions and presentation cues.
 - **Dashboards** (frontend): candidate overview and progress, employer hiring overview, admin configuration.
 - **Database.** 16 tables with constraints and Alembic migrations, a seed script and an [ERD](docs/ERD.md).
-- **Tests.** 169 automated API tests: two-factor sign up and sign in, face verification, lockouts, admin face reset, jobs, applications, the shortlist flow (notifications, accept/decline, contact sharing), CV-only ranking and privacy rules, the interview engine and the admin endpoints.
+- **Tests.** 184 automated API tests: two-factor sign up and sign in, face verification, lockouts, admin face reset, jobs, applications, the shortlist flow (notifications, accept/decline, contact sharing), CV-only ranking and privacy rules, the interview engine and the admin endpoints.
 
 ### Next steps
 
@@ -227,8 +227,11 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | POST | `/api/jobs` | employer | Create a job with weighted skills and success criteria |
 | PUT | `/api/jobs/{id}` | job owner | Replace a job |
 | PATCH | `/api/jobs/{id}/status` | job owner | `{ "status": "open" \| "closed" }` |
-| POST | `/api/jobs/{id}/apply` | candidate | `{ "consent": true }`. Consent also turns on profile sharing |
-| DELETE | `/api/jobs/{id}/apply` | candidate | Withdraw the application |
+| POST | `/api/jobs/{id}/apply` | candidate | `{ "consent": true }`. Needs an uploaded CV (else 400 "Upload your CV before applying"). Copies the current parsed CV and a reference to the current file into the application. Consent also turns on profile sharing |
+| DELETE | `/api/jobs/{id}/apply` | candidate | Withdraw the application; its stored CV file is deleted unless the candidate's current CV or another application still uses it |
+| GET | `/api/applications/{id}/cv` | job owner | The parsed CV the candidate applied with, without name, email, phone, LinkedIn or GitHub. After the candidate accepts it also has `file` and `contact`. 403 if not the owner or the candidate didn't consent |
+| GET | `/api/applications/{id}/cv-file` | job owner | The original CV file (own content type; PDFs inline, others as attachment). 403 until the candidate accepts the shortlist |
+| DELETE | `/api/auth/me` | candidate | Delete the account with its applications, sessions and stored CV files |
 | PATCH | `/api/applications/{id}/status` | job owner | `{ "status": "shortlisted" \| "not_progressing", "message"?: string (max 500) }`. Notifies the candidate. `409` once the candidate has answered, `403` for another employer |
 | GET | `/api/applications/mine` | candidate | Own applications: job, company, `status`, `employerMessage`, `candidateNote`, `appliedAt`, `updatedAt`, `history`. `employer` (name, company, email) only after they accepted |
 | POST | `/api/applications/{id}/respond` | candidate | `{ "decision": "accept" \| "decline", "note"?: string (max 500) }`. Only while `shortlisted`, only once (`409` otherwise), only on their own application (`403`). Notifies the employer |
@@ -245,7 +248,7 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | POST | `/api/interviews/{id}/finish` | candidate | Computes the session score, marks it `completed` and returns the summary |
 | GET | `/api/interviews`, `/api/interviews/{id}` | candidate | Own history and one interview (other candidates' ids return `404`) |
 | GET | `/api/progress` | candidate | Per-skill history, score trend and weakness profile with coaching tips |
-| POST | `/api/cv` | candidate | Upload a CV (multipart `file`: PDF/DOCX/TXT, max 5 MB). Returns `{ cv, provider, fileName, text }` and saves it. Alias: `/api/cv/analyze` |
+| POST | `/api/cv` | candidate | Upload a CV (multipart `file`: PDF/DOCX/TXT, max 5 MB). Returns `{ cv, file, provider, fileName, text }`, saves it and keeps the original file under `storage/cvs/` (random name). The latest upload is the current CV. Alias: `/api/cv/analyze` |
 | GET | `/api/cv` | candidate | The saved parsed CV |
 | PUT | `/api/cv` | candidate | Save the user's edits to the parsed CV |
 | POST | `/api/cv/match` | candidate | `{ roleId }` or `{ jd }`: matched / partial / missing skills, weighted percentage and requirement checks (deterministic) |
@@ -253,7 +256,7 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 
 ### CV analysis and the AI provider layer
 
-`AI_PROVIDER=gemini|rules` in `.env` picks the provider (`app/services/ai/`). Gemini output is validated with Pydantic; invalid JSON is retried once, and any failure (no key, quota, timeout, bad output) falls back to the rule-based parser, which ports the frontend's `cvParser.js`. Every CV and job-description response says which one answered in `provider`. Only the CV text is sent to Gemini, with email, phone and profile-link lines removed first; contact details are read locally. Skills returned by Gemini are matched to the `skills` table by name and alias in the application, and the rest become `otherSkills`. The extracted text is stored, never the uploaded file. Matching (`/api/cv/match`) never uses AI. After pulling this change run `alembic upgrade head`; `docs/sample-cv.txt` is a CV to try.
+`AI_PROVIDER=gemini|rules` in `.env` picks the provider (`app/services/ai/`). Gemini output is validated with Pydantic; invalid JSON is retried once, and any failure (no key, quota, timeout, bad output) falls back to the rule-based parser, which ports the frontend's `cvParser.js`. Every CV and job-description response says which one answered in `provider`. Only the CV text is sent to Gemini, with email, phone and profile-link lines removed first; contact details are read locally. Skills returned by Gemini are matched to the `skills` table by name and alias in the application, and the rest become `otherSkills`. The extracted text is stored, and so is the uploaded file (see the last section). Matching (`/api/cv/match`) never uses AI. After pulling this change run `alembic upgrade head`; `docs/sample-cv.txt` is a CV to try.
 
 ### Interview engine
 
@@ -336,3 +339,11 @@ scripts/
   generate_erd.py       Writes docs/ERD.md
 tests/           pytest suite, runs against the intervo_test database
 ```
+
+## Original CV files and what employers see
+
+- `POST /api/cv` saves the uploaded file in `storage/cvs/` (git-ignored; `STORAGE_DIR` moves it) under a random name. The `cv_files` table keeps the file name, type, size and upload date. Only a candidate's latest file is current; an older one is deleted unless an application still holds it.
+- A candidate must have a CV to apply. On apply, the current parsed CV and a reference to the current file are copied into the application (`cv_snapshot`, `cv_file_id`). Later uploads or edits never change what that employer received, and the CV match for that application uses the snapshot.
+- Job owner, consenting applicants only: before the candidate accepts, `GET /api/applications/{id}/cv` gives the parsed CV (summary, skills, education, experience, projects, certifications) with no contact details and no file name. After acceptance, `GET /api/applications/{id}/cv-file` returns the original file, and `/cv` adds `file` and `contact`. Every other case is 403. Interview scores are never returned.
+- Withdrawing an application or deleting the candidate account deletes the stored files nothing else needs.
+- Run `alembic upgrade head` after pulling. Applications made before this change get a snapshot of the candidate's CV from migration time but have no original file.

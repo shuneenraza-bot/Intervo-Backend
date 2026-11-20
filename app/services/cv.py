@@ -8,6 +8,7 @@ from app.models import CandidateProfile, JobRole, RoleSkill, User
 from app.schemas.cv import (
     LLMCV,
     LLMJD,
+    CVFileOut,
     CVResponse,
     JDParseIn,
     JDParseOut,
@@ -16,7 +17,8 @@ from app.schemas.cv import (
     MatchOut,
     ParsedCV,
 )
-from app.services import cv_rules
+from app.schemas.base import to_ms
+from app.services import cv_files, cv_rules
 from app.services.ai import run_json_task
 from app.services.ai.prompts import cv_prompt, jd_prompt, strip_contact
 from app.services.catalog import load_skills, weighted_skills
@@ -120,20 +122,36 @@ def _store(db: Session, user: User, cv: ParsedCV, **extra) -> CandidateProfile:
 
 
 def _response(profile: CandidateProfile) -> CVResponse:
+    f = profile.cv_file
     return CVResponse(
         cv=ParsedCV.model_validate(profile.parsed_cv),
+        file=CVFileOut(name=f.file_name, size=f.size_bytes, content_type=f.content_type,
+                       uploaded_at=to_ms(f.created_at)) if f else None,
         provider=profile.cv_provider,
         file_name=profile.cv_file_name,
         text=profile.cv_text or "",
     )
 
 
-def analyze_and_save(db: Session, user: User, text: str, file_name: str) -> CVResponse:
+def analyze_and_save(db: Session, user: User, text: str, file_name: str, data: bytes) -> CVResponse:
     skills = load_skills(db)
     # Only the CV text without contact lines is sent to an AI provider.
     llm, provider = run_json_task(cv_prompt(strip_contact(text)), LLMCV, task="cv", text=text, skills=skills)
     cv = build_cv(llm, text, skills)
-    profile = _store(db, user, cv, cv_text=text, cv_file_name=file_name, cv_provider=provider)
+    old = db.get(CandidateProfile, user.id)
+    old_file_id = old.cv_file_id if old else None
+    stored = cv_files.add_file(db, user.id, file_name, data)
+    try:
+        profile = _store(db, user, cv, cv_text=text, cv_file_name=file_name, cv_provider=provider,
+                         cv_file_id=stored.id)
+    except Exception:
+        db.rollback()
+        cv_files.remove_stored([stored.storage_name])
+        raise
+    # The previous file goes unless an application still holds it as the employer's snapshot.
+    gone = cv_files.discard_if_unused(db, old_file_id)
+    db.commit()
+    cv_files.remove_stored(gone)
     return _response(profile)
 
 

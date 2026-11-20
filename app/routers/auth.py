@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from app.deps import CurrentUser, DbSession, FacePendingUser
 from app.schemas.auth import (
@@ -62,3 +62,12 @@ def me(user: CurrentUser):
 def enrol_face(body: FaceEnrolRequest, user: CurrentUser, db: DbSession):
     """Re-enrol: replace the signed-in user's face template. There is no delete."""
     return UserOut.from_user(auth_service.enrol_face(db, user, body.template))
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me(user: CurrentUser, db: DbSession):
+    """Candidates can delete their own account. Their applications, sessions and stored CV files go too."""
+    if user.role != "candidate":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Only candidate accounts can be deleted here.")
+    auth_service.delete_candidate_account(db, user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,4 +1,4 @@
-"""Turns an uploaded CV file (PDF, DOCX, TXT) into clean plain text. The file itself is never stored."""
+"""Turns an uploaded CV file (PDF, DOCX, TXT) into clean plain text."""
 
 import io
 import re

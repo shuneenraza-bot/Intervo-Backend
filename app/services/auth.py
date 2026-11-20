@@ -198,3 +198,13 @@ def enrol_face(db: Session, user: User, template: LandmarkTemplate) -> User:
     db.commit()
     db.refresh(user)
     return user
+
+
+def delete_candidate_account(db: Session, user: User) -> None:
+    """Deletes the candidate and everything of theirs (profile, applications, sessions, files)."""
+    from app.services import cv_files
+
+    names = cv_files.user_storage_names(db, user.id)
+    db.delete(user)  # the database cascades the rest, including the cv_files rows
+    db.commit()
+    cv_files.remove_stored(names)

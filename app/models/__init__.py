@@ -9,6 +9,7 @@ from app.models.catalog import (
     ScoringRules,
     Skill,
 )
+from app.models.cv_file import CvFile
 from app.models.interview import InterviewSession, SessionAnswer
 from app.models.job import Application, ApplicationStatusEvent, Job, JobSkill
 from app.models.notification import Notification
@@ -18,6 +19,7 @@ __all__ = [
     "Application",
     "ApplicationStatusEvent",
     "CandidateProfile",
+    "CvFile",
     "Domain",
     "EvaluationCriterion",
     "InterviewSession",

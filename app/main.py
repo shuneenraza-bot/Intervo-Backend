@@ -11,7 +11,7 @@ app.add_middleware(
     allow_origins=settings.cors_origin_list,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Retry-After"],  # the sign-in countdown reads it on 429
+    expose_headers=["Retry-After", "Content-Disposition"],  # Retry-After: the sign-in countdown on 429; Content-Disposition: the CV download name
 )
 
 api = APIRouter(prefix="/api")

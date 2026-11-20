@@ -141,20 +141,20 @@ def test_session_roles_and_validation(client, employer):
 
 # ---------- the point of it all ----------
 
-def test_synced_candidate_gets_a_real_cv_match(client, employer):
-    """A fresh candidate matches 0%; after syncing the profile the employer sees the CV match.
+def test_synced_candidate_gets_a_real_cv_match(client, db, employer):
+    """The employer sees the CV match of the profile synced before applying (a snapshot).
     The synced sessions are stored for the candidate but never appear in the employer's view."""
     job = create_job(client, employer[1])
     user, headers = signup(client, candidate_payload())
-    assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=headers).status_code == 201
-
-    url = f"/api/jobs/{job['id']}/candidates"
-    before = client.get(url, headers=employer[1]).json()["candidates"][0]
-    assert before["match"]["percentage"] == 0 and before["cvSummary"] is None
+    assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=headers).status_code == 400
 
     assert client.put("/api/profile", json=PROFILE, headers=headers).status_code == 200
+    db.get(CandidateProfile, user["id"]).parsed_cv = {"skills": AYESHA_SKILLS}  # as POST /api/cv would
+    db.commit()
     for days, scores in AYESHA_SESSIONS:
         assert client.post("/api/sessions", json=session_body(days, scores), headers=headers).status_code == 201
+    assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=headers).status_code == 201
+    url = f"/api/jobs/{job['id']}/candidates"
 
     res = client.get(url, headers=employer[1])
     entry = res.json()["candidates"][0]

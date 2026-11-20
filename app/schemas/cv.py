@@ -116,8 +116,18 @@ class ParsedCV(CamelModel):
         return _trim(items, 200, 200)
 
 
+class CVFileOut(CamelModel):
+    """The stored original file (never its path)."""
+
+    name: str
+    size: int
+    content_type: str
+    uploaded_at: int
+
+
 class CVResponse(CamelModel):
     cv: ParsedCV
+    file: CVFileOut | None = None  # the current original file; null for CVs uploaded before files were kept
     provider: str | None = None  # "gemini" or "rules"
     file_name: str | None = None
     text: str = ""

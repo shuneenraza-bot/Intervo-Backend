@@ -301,6 +301,7 @@ def test_config_changes_apply_to_the_next_request(client, admin, lib, db):
     applicant, applicant_headers = signup(client, candidate_payload(email="bilal@example.com", name="Bilal"))
     profile = db.get(CandidateProfile, applicant["id"]) or CandidateProfile(user_id=applicant["id"])
     profile.skills = ["JavaScript"]
+    profile.parsed_cv = {"skills": ["JavaScript"]}
     db.add(profile)
     db.commit()
     client.post(f"/api/jobs/{job_id}/apply", json={"consent": True}, headers=applicant_headers)

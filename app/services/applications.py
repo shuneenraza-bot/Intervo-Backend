@@ -7,8 +7,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import new_id
-from app.models import Application, ApplicationStatusEvent, Job, User
-from app.schemas.applications import EmployerContact, HistoryItem, MyApplication
+from app.models import Application, ApplicationStatusEvent, CvFile, Job, User
+from app.schemas.applications import (
+    ApplicantContact,
+    ApplicationCV,
+    CVFileInfo,
+    EmployerContact,
+    EmployerCVOut,
+    HistoryItem,
+    MyApplication,
+)
+from app.schemas.cv import ParsedCV
+from app.services import cv_files
+from app.services.jobs import _contact, snapshot_of
 from app.schemas.base import to_ms
 from app.schemas.jobs import ApplicationOut
 from app.services.notifications import notify
@@ -127,3 +138,54 @@ def respond(db: Session, application_id: str, candidate: User, decision: str, no
                    f"No contact details were shared.{said}", link)
     db.commit()
     return _my_application(application)
+
+
+# ---------- employer: the CV the candidate applied with ----------
+
+def _readable(db: Session, application_id: str, employer: User) -> Application:
+    """Job owner only, and only for applicants who consented and share their profile."""
+    application = db.scalars(
+        select(Application).where(Application.id == application_id)
+        .options(selectinload(Application.job), selectinload(Application.candidate).selectinload(User.profile))
+    ).first()
+    if application is None:
+        raise _error(status.HTTP_404_NOT_FOUND, "This application could not be found.")
+    if application.job.employer_id != employer.id:
+        raise _error(status.HTTP_403_FORBIDDEN, "Only the employer who posted this job can do that.")
+    profile = application.candidate.profile
+    if not application.consent or profile is None or not profile.share_with_employers:
+        raise _error(status.HTTP_403_FORBIDDEN, "This candidate hasn't agreed to share their CV.")
+    return application
+
+
+def application_cv(db: Session, application_id: str, employer: User) -> ApplicationCV:
+    application = _readable(db, application_id, employer)
+    snap = snapshot_of(application, application.candidate.profile)
+    if not snap.get("parsed"):
+        raise _error(status.HTTP_404_NOT_FOUND, "This application has no CV.")
+    parsed = ParsedCV.model_validate(snap["parsed"])  # `contact` is simply not copied below
+    out = ApplicationCV(
+        application_id=application.id, status=application.status,
+        cv=EmployerCVOut(
+            summary=parsed.summary, skills=parsed.skills, other_skills=parsed.other_skills,
+            education=parsed.education, experience=parsed.experience, projects=parsed.projects,
+            certifications=parsed.certifications, experience_years=parsed.experience_years,
+        ),
+    )
+    if application.status == "accepted":  # the file name may hold the candidate's name
+        row = db.get(CvFile, application.cv_file_id) if application.cv_file_id else None
+        if row is not None:
+            out.file = CVFileInfo(name=row.file_name, size=row.size_bytes, content_type=row.content_type,
+                                  uploaded_at=to_ms(row.created_at))
+        out.contact = ApplicantContact(**_contact(application.candidate, snap))
+    return out
+
+
+def application_cv_file(db: Session, application_id: str, employer: User) -> CvFile:
+    application = _readable(db, application_id, employer)
+    if application.status != "accepted":
+        raise _error(status.HTTP_403_FORBIDDEN, "The original CV is available after the candidate accepts your shortlist.")
+    row = db.get(CvFile, application.cv_file_id) if application.cv_file_id else None
+    if row is None or not cv_files.path_of(row).is_file():
+        raise _error(status.HTTP_404_NOT_FOUND, "The original CV file is not available.")
+    return row

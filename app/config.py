@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:5174"
     test_database_url: str | None = None
 
+    # Original CV files live in <storage_dir>/cvs (relative paths are from the project root).
+    storage_dir: str = "storage"
+
     # AI provider layer (app/services/ai). Keys are never logged.
     ai_provider: str = "gemini"  # "gemini" or "rules"
     gemini_api_key: str | None = None

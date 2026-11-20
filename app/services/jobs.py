@@ -1,5 +1,6 @@
 """Jobs, applications and the employer's ranked candidate list."""
 
+import copy
 from collections import Counter
 from datetime import datetime, timezone
 
@@ -19,8 +20,9 @@ from app.models import (
     Skill,
     User,
 )
+from app.schemas.base import to_ms
 from app.schemas.jobs import ApplicationOut, JobIn, JobOut, JobsResponse
-from app.services import cv_rules
+from app.services import cv_files, cv_rules
 from app.services.catalog import load_skills
 from app.services.matching import cv_fit, cv_summary
 
@@ -149,15 +151,22 @@ def apply_to_job(db: Session, job_id: str, candidate: User, consent: bool) -> Ap
     if db.scalars(select(Application).where(Application.job_id == job_id, Application.candidate_id == candidate.id)).first():
         raise _error(status.HTTP_409_CONFLICT, already)
 
-    application = Application(id=new_id("app"), job_id=job_id, candidate_id=candidate.id, consent=consent, status="applied")
+    profile = db.get(CandidateProfile, candidate.id)
+    if profile is None or not profile.parsed_cv:
+        raise _error(status.HTTP_400_BAD_REQUEST, "Upload your CV before applying")
+    file = profile.cv_file
+    # The employer gets this copy; uploading or editing a CV later never changes it.
+    snapshot = copy.deepcopy({
+        "parsed": profile.parsed_cv, "summary": profile.cv, "skills": profile.skills or [],
+        "fileName": file.file_name if file else profile.cv_file_name,
+        "uploadedAt": to_ms(file.created_at) if file else None,
+    })
+    application = Application(id=new_id("app"), job_id=job_id, candidate_id=candidate.id, consent=consent,
+                              status="applied", cv_snapshot=snapshot, cv_file_id=file.id if file else None)
     application.history.append(ApplicationStatusEvent(id=new_id("hist"), status="applied"))
     db.add(application)
     if consent:
         # Consent means "share my CV skill match with this employer" (never interview results).
-        profile = db.get(CandidateProfile, candidate.id)
-        if profile is None:
-            profile = CandidateProfile(user_id=candidate.id, skills=[])
-            db.add(profile)
         profile.share_with_employers = True
         profile.consent_at = profile.consent_at or datetime.now(timezone.utc)
     try:
@@ -174,24 +183,36 @@ def withdraw_application(db: Session, job_id: str, candidate: User) -> None:
         select(Application).where(Application.job_id == job_id, Application.candidate_id == candidate.id)
     ).first()
     if application is not None:
+        file_id = application.cv_file_id
         db.delete(application)
+        db.flush()
+        gone = cv_files.discard_if_unused(db, file_id)
         db.commit()
+        cv_files.remove_stored(gone)
 
 
 # ---------- ranked candidates ----------
 
-def _requirement_checks(job: JobOut, summary: dict | None, profile: CandidateProfile) -> list[dict]:
+def _requirement_checks(job: JobOut, summary: dict | None, cv: dict | None) -> list[dict]:
     """Experience / education checks. The job has no separate requirement fields, so what the
     description asks for ("2+ years", "Bachelor's in ...") is read the same way the candidate's
     job-description match reads it, and compared with the CV summary."""
     jd = cv_rules.parse_jd(job.description, [])
-    degrees = [e.get("degree") or "" for e in (profile.cv or {}).get("education") or []]
+    degrees = [e.get("degree") or "" for e in (cv or {}).get("education") or []]
     return cv_rules.requirement_checks(jd, (summary or {}).get("experienceYears") or 0, degrees)
 
 
-def _contact(user: User, profile: CandidateProfile) -> dict:
+def snapshot_of(application: Application, profile: CandidateProfile | None) -> dict:
+    """The CV this employer received. Applications from before snapshots existed use the live profile."""
+    if application.cv_snapshot:
+        return application.cv_snapshot
+    p = profile
+    return {"parsed": p.parsed_cv if p else None, "summary": p.cv if p else None, "skills": (p.skills if p else None) or []}
+
+
+def _contact(user: User, snapshot: dict) -> dict:
     """Name, email and phone for the contact card. The phone comes from the CV, if there is one."""
-    cv = profile.parsed_cv or profile.cv or {}
+    cv = snapshot.get("parsed") or snapshot.get("summary") or {}
     phone = ((cv.get("contact") or {}).get("phone") or "").strip()
     return {"name": user.name, "email": user.email, "phone": phone or None}
 
@@ -221,16 +242,17 @@ def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
     candidates = []
     for application in visible:
         user, profile = application.candidate, application.candidate.profile
-        summary = cv_summary(profile.cv)
+        snap = snapshot_of(application, profile)
+        summary = cv_summary(snap.get("summary"))
         entry = {
             "application": ApplicationOut.from_application(application).model_dump(by_alias=True),
             "candidate": {"id": user.id, "name": user.name},
             "cvSummary": summary,
-            "match": cv_fit(job_dict, {"skills": profile.skills or []}, skill_config,
-                            _requirement_checks(job_out, summary, profile)),
+            "match": cv_fit(job_dict, {"skills": snap.get("skills") or []}, skill_config,
+                            _requirement_checks(job_out, summary, snap.get("summary"))),
         }
         if application.status == "accepted":  # the candidate said yes: now they can be contacted
-            entry["contact"] = _contact(user, profile)
+            entry["contact"] = _contact(user, snap)
         candidates.append(entry)
     candidates.sort(key=lambda c: c["match"]["percentage"], reverse=True)  # stable: ties keep application order
 
