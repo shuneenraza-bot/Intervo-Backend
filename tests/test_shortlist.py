@@ -228,3 +228,13 @@ def test_employer_still_never_sees_interview_scores(client, employer, ayesha):
     text = client.get(f"/api/jobs/{job['id']}/candidates", headers=employer[1]).text.lower()
     for word in ("session", "interview", "avgscore", "indicators", "followup", "trend"):
         assert word not in text, word
+
+
+def test_my_applications_route_answers_get_for_a_candidate(client, ayesha):
+    """GET /api/applications/mine must be a real GET route (not shadowed by /applications/{id}...)."""
+    res = client.get("/api/applications/mine", headers=ayesha[1])
+    assert res.status_code == 200, res.text
+    assert res.json() == []
+    # Notification routes the bell uses: right verbs, not swallowed by /notifications/{id}/read.
+    assert client.get("/api/notifications/unread-count", headers=ayesha[1]).status_code == 200
+    assert client.post("/api/notifications/read-all", headers=ayesha[1]).status_code == 200
