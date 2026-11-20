@@ -10,7 +10,7 @@ from app.config import settings
 from app.models import SessionAnswer
 from app.services.ai import speech
 from app.services.ai.speech import GroqWhisperProvider, NoSpeechProvider, SpeechProvider, SpeechUnavailable, Transcript
-from tests.conftest import employer_payload
+from tests.conftest import employer_payload, signup_full
 from tests.test_interviews import LONG_ANSWER, answer, auth, library, other_auth, rules_only, start  # noqa: F401
 
 
@@ -132,7 +132,7 @@ def test_transcribe_is_owner_only_and_candidate_only(client, auth, other_auth, l
     iv = start(client, auth)
     assert client.post(url(iv, "transcribe"), headers=other_auth, files=audio()).status_code == 404
     assert client.post(url(iv, "transcribe"), files=audio()).status_code == 401
-    employer = client.post("/api/auth/signup", json=employer_payload()).json()
+    employer = signup_full(client, employer_payload())
     assert client.post(url(iv, "transcribe"), headers={"Authorization": f"Bearer {employer['token']}"},
                        files=audio()).status_code == 403
 

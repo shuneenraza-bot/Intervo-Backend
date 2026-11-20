@@ -149,6 +149,12 @@ def list_users(db: DbSession, role: str | None = None):
     return svc.list_users(db, role)
 
 
+@router.post("/users/{user_id}/reset-face", response_model=AdminUserOut)
+def reset_face(user_id: str, db: DbSession):
+    """Clears a user's face template. They must enrol a new face at their next sign-in."""
+    return svc.reset_face(db, user_id)
+
+
 @router.get("/stats", response_model=AdminStatsOut)
 def get_stats(db: DbSession):
     return svc.stats(db)

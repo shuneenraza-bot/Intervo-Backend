@@ -15,7 +15,7 @@ from app.services import ai
 from app.services.ai.base import AIUnavailable, InvalidAIResponse, LLMProvider
 from app.services.ai.prompts import strip_contact
 from app.services.cv_text import MAX_FILE_BYTES
-from tests.conftest import employer_payload
+from tests.conftest import employer_payload, signup_full
 
 SAMPLE = Path(__file__).parent.parent / "docs" / "sample-cv.txt"
 SKILLS = {  # name -> (aliases, related)
@@ -167,8 +167,7 @@ def test_zip_bomb_docx_is_rejected(client, auth, library):
 
 
 def test_cv_endpoints_are_candidate_only(client, library):
-    res = client.post("/api/auth/signup", json=employer_payload())
-    headers = {"Authorization": f"Bearer {res.json()['token']}"}
+    headers = {"Authorization": f"Bearer {signup_full(client, employer_payload())['token']}"}
     assert upload(client, headers).status_code == 403
     assert client.get("/api/cv", headers=headers).status_code == 403
     assert client.post("/api/jd/parse", headers=headers, json={"text": "React"}).status_code == 403

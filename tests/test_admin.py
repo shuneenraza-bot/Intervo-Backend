@@ -6,7 +6,7 @@ from app.config import settings
 from app.db import new_id
 from app.models import CandidateProfile, EvaluationCriterion, ScoringRules, User
 from app.services.security import hash_password
-from tests.conftest import PASSWORD, candidate_payload, employer_payload, face_template
+from tests.conftest import PASSWORD, bearer, candidate_payload, employer_payload, face_template, finish_signin, sign_in, signup_full
 
 
 @pytest.fixture(autouse=True)
@@ -20,15 +20,12 @@ def admin(client, db):
     db.add(User(id=new_id("adm"), role="admin", name="Intervo Admin", email="admin@example.com",
                 password_hash=hash_password(PASSWORD)))
     db.commit()
-    res = client.post("/api/auth/login", json={"email": "admin@example.com", "role": "admin", "password": PASSWORD})
-    assert res.status_code == 200, res.text
-    return {"Authorization": f"Bearer {res.json()['token']}"}
+    return bearer(sign_in(client, "admin@example.com", "admin")["token"])
 
 
 def signup(client, payload):
-    res = client.post("/api/auth/signup", json=payload)
-    assert res.status_code == 201, res.text
-    return res.json()["user"], {"Authorization": f"Bearer {res.json()['token']}"}
+    body = signup_full(client, payload)
+    return body["user"], bearer(body["token"])
 
 
 def post(client, admin, path, body, status=201):
@@ -248,12 +245,13 @@ def test_rules_defaults_partial_update_and_ranges(client, admin, db):
 # ---------- users and stats ----------
 
 def test_users_list_has_no_secrets_and_stats_count(client, admin, db):
-    ayesha, _ = signup(client, candidate_payload(face={"template": face_template()}))
+    ayesha, _ = signup(client, candidate_payload())
     signup(client, employer_payload())
     users = client.get("/api/admin/users", headers=admin)
     assert users.status_code == 200
     rows = {u["email"]: u for u in users.json()}
-    assert rows["ayesha@example.com"]["faceEnrolled"] is True and rows["hr@example.com"]["faceEnrolled"] is False
+    assert rows["ayesha@example.com"]["faceEnrolled"] is True and rows["hr@example.com"]["faceEnrolled"] is True
+    assert rows["admin@example.com"]["faceEnrolled"] is True  # the admin fixture signed in, so enrolled too
     assert rows["hr@example.com"]["company"] == "Northstar Digital"
     assert {u["role"] for u in users.json()} == {"candidate", "employer", "admin"}
     for forbidden in ("password", "hash", "template", "features", "argon"):
@@ -316,3 +314,40 @@ def test_config_changes_apply_to_the_next_request(client, admin, lib, db):
     assert percentage() == 50  # half credit for the related skill
     client.put("/api/admin/skills/react", json={"name": "React", "related": []}, headers=admin)
     assert percentage() == 0
+
+
+# ---------- reset face ----------
+
+def test_reset_face_forces_re_enrolment(client, admin):
+    ayesha, ayesha_headers = signup(client, candidate_payload())
+    assert client.get("/api/auth/me", headers=ayesha_headers).status_code == 200
+
+    res = client.post(f"/api/admin/users/{ayesha['id']}/reset-face", headers=admin)
+    assert res.status_code == 200
+    row = res.json()
+    assert row["id"] == ayesha["id"] and row["faceEnrolled"] is False
+    assert "face" not in row and "template" not in row
+
+    # The open session stops working until the user enrols again.
+    assert client.get("/api/auth/me", headers=ayesha_headers).status_code == 401
+    listed = {u["email"]: u for u in client.get("/api/admin/users", headers=admin).json()}
+    assert listed["ayesha@example.com"]["faceEnrolled"] is False
+
+    # Next sign-in: password, then the face step asks to enrol (not verify) a new face.
+    step = client.post("/api/auth/login", json={"email": "ayesha@example.com", "role": "candidate", "password": PASSWORD}).json()
+    assert step["faceEnrolled"] is False
+    again = finish_signin(client, step, offset=0.3)
+    assert client.get("/api/auth/me", headers=bearer(again["token"])).status_code == 200
+    # The new face is the one that now verifies.
+    step = client.post("/api/auth/login", json={"email": "ayesha@example.com", "role": "candidate", "password": PASSWORD}).json()
+    assert step["faceEnrolled"] is True
+    assert finish_signin(client, step, offset=0.3)["token"]
+
+
+def test_reset_face_is_admin_only_and_needs_a_real_user(client, admin, candidate):
+    url = f"/api/admin/users/{candidate['user']['id']}/reset-face"
+    assert client.post(url, headers=bearer(candidate["token"])).status_code == 403
+    assert client.post(url).status_code == 401
+    assert client.post("/api/admin/users/nobody/reset-face", headers=admin).status_code == 404
+    # A candidate can't reset their own face either; it stays enrolled.
+    assert client.get("/api/auth/me", headers=bearer(candidate["token"])).status_code == 200

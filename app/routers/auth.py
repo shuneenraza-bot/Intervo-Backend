@@ -1,42 +1,56 @@
 from fastapi import APIRouter, status
 
-from app.deps import CurrentUser, DbSession
+from app.deps import CurrentUser, DbSession, FacePendingUser
 from app.schemas.auth import (
     AuthResponse,
     FaceEnrolRequest,
+    FaceVerifyRequest,
     LoginRequest,
-    LookupRequest,
-    LookupResponse,
+    PendingResponse,
     SignupRequest,
     UserOut,
 )
 from app.services import auth as auth_service
 from app.services.face import is_landmark_template
-from app.services.security import create_access_token
+from app.services.security import FACE_PENDING_MINUTES, SCOPE_FACE_PENDING, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _auth_response(user) -> AuthResponse:
+def _pending(user) -> PendingResponse:
+    return PendingResponse(
+        pending_token=create_access_token(user.id, user.role, scope=SCOPE_FACE_PENDING),
+        face_enrolled=is_landmark_template(user.face_template),
+        expires_in=FACE_PENDING_MINUTES * 60,
+    )
+
+
+def _full(user) -> AuthResponse:
     return AuthResponse(token=create_access_token(user.id, user.role), user=UserOut.from_user(user))
 
 
-@router.post("/lookup", response_model=LookupResponse)
-def lookup(body: LookupRequest, db: DbSession):
-    """Sign-in step 1: does this email + role exist, and should the UI offer Face ID?"""
-    user = auth_service.find_account(db, body.email, body.role)
-    return LookupResponse(face_enabled=is_landmark_template(user.face_template))
-
-
-@router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=PendingResponse, status_code=status.HTTP_201_CREATED)
 def signup(body: SignupRequest, db: DbSession):
-    return _auth_response(auth_service.signup(db, body))
+    """Creates the account. The face step (enrol) must follow before there is a full token."""
+    return _pending(auth_service.signup(db, body))
 
 
-@router.post("/login", response_model=AuthResponse)
+@router.post("/login", response_model=PendingResponse)
 def login(body: LoginRequest, db: DbSession):
-    """Sign in with a password OR a face template; either one is enough."""
-    return _auth_response(auth_service.login(db, body))
+    """Step 1: email, role and password. Returns a 5-minute face-pending token, never a full token."""
+    return _pending(auth_service.login(db, body))
+
+
+@router.post("/face/verify", response_model=AuthResponse)
+def verify_face(body: FaceVerifyRequest, user: FacePendingUser, db: DbSession):
+    """Step 2 for an enrolled account (face-pending token). Success returns the full token."""
+    return _full(auth_service.verify_face(db, user, body))
+
+
+@router.post("/face/enroll", response_model=AuthResponse)
+def enrol_face_pending(body: FaceEnrolRequest, user: FacePendingUser, db: DbSession):
+    """Step 2 for an account without a face (face-pending token). Success returns the full token."""
+    return _full(auth_service.enrol_face_pending(db, user, body.template))
 
 
 @router.get("/me", response_model=UserOut)
@@ -46,10 +60,5 @@ def me(user: CurrentUser):
 
 @router.put("/face", response_model=UserOut)
 def enrol_face(body: FaceEnrolRequest, user: CurrentUser, db: DbSession):
-    """Enrol or replace the signed-in user's Face ID template."""
+    """Re-enrol: replace the signed-in user's face template. There is no delete."""
     return UserOut.from_user(auth_service.enrol_face(db, user, body.template))
-
-
-@router.delete("/face", response_model=UserOut)
-def delete_face(user: CurrentUser, db: DbSession):
-    return UserOut.from_user(auth_service.remove_face(db, user))

@@ -8,7 +8,7 @@ from app.models import Domain, EvaluationCriterion, JobRole, QuestionTemplate, R
 from app.services import ai
 from app.services.ai.base import LLMProvider
 from app.services.matching import js_round
-from tests.conftest import candidate_payload
+from tests.conftest import candidate_payload, signup_full
 
 SKILLS = ["React", "JavaScript", "CSS", "Python", "Communication"]
 # (id, skill, type, followUp). Python has no template on purpose: it forces a generated question.
@@ -60,8 +60,8 @@ def auth(candidate):
 
 @pytest.fixture
 def other_auth(client):
-    res = client.post("/api/auth/signup", json=candidate_payload(name="Bilal Ahmed", email="bilal@example.com"))
-    return {"Authorization": f"Bearer {res.json()['token']}"}
+    body = signup_full(client, candidate_payload(name="Bilal Ahmed", email="bilal@example.com"))
+    return {"Authorization": f"Bearer {body['token']}"}
 
 
 def start(client, auth, **body):

@@ -93,25 +93,46 @@ def face_template(offset: float = 0.0) -> dict:
 
 def candidate_payload(**overrides) -> dict:
     return {"role": "candidate", "name": "Ayesha Khan", "email": "ayesha@example.com",
-            "password": PASSWORD, "dataConsent": True, "face": None, **overrides}
+            "password": PASSWORD, "dataConsent": True, **overrides}
 
 
 def employer_payload(**overrides) -> dict:
     return {"role": "employer", "name": "Hira Malik", "email": "hr@example.com",
-            "company": "Northstar Digital", "password": PASSWORD, "face": None, **overrides}
+            "company": "Northstar Digital", "password": PASSWORD, **overrides}
+
+
+def bearer(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}"}
+
+
+def finish_signin(client, pending: dict, offset: float = 0.0) -> dict:
+    """The face step with a pending-token response: enrol if no face yet, else verify.
+    Returns the full-token body {token, user}."""
+    headers = bearer(pending["pendingToken"])
+    if pending["faceEnrolled"]:
+        res = client.post("/api/auth/face/verify", headers=headers,
+                          json={"template": face_template(offset), "liveness": {"blink": True}})
+    else:
+        res = client.post("/api/auth/face/enroll", headers=headers, json={"template": face_template(offset)})
+    assert res.status_code == 200, res.text
+    return res.json()
+
+
+def signup_full(client, payload: dict) -> dict:
+    """Sign up, then enrol the face. Returns {token, user} with a full token."""
+    res = client.post("/api/auth/signup", json=payload)
+    assert res.status_code == 201, res.text
+    return finish_signin(client, res.json())
+
+
+def sign_in(client, email: str, role: str = "candidate", password: str = PASSWORD, offset: float = 0.0) -> dict:
+    """Password step, then the face step. Returns {token, user}."""
+    res = client.post("/api/auth/login", json={"email": email, "role": role, "password": password})
+    assert res.status_code == 200, res.text
+    return finish_signin(client, res.json(), offset)
 
 
 @pytest.fixture
 def candidate(client):
-    """A signed-up candidate without Face ID. Returns the signup response body."""
-    res = client.post("/api/auth/signup", json=candidate_payload())
-    assert res.status_code == 201, res.text
-    return res.json()
-
-
-@pytest.fixture
-def face_candidate(client):
-    """A signed-up candidate with Face ID enrolled."""
-    res = client.post("/api/auth/signup", json=candidate_payload(face={"template": face_template()}))
-    assert res.status_code == 201, res.text
-    return res.json()
+    """A signed-up candidate with a face enrolled. Returns {token, user} (full token)."""
+    return signup_full(client, candidate_payload())

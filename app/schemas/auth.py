@@ -26,30 +26,11 @@ class _EmailModel(CamelModel):
         return v.strip().lower() if isinstance(v, str) else v
 
 
-class LookupRequest(_EmailModel):
-    role: Role
-
-
-class LookupResponse(CamelModel):
-    face_enabled: bool
-
-
 class LoginRequest(_EmailModel):
+    """Sign-in step 1. A correct password only opens the face step."""
+
     role: Role
-    password: str | None = Field(default=None, max_length=128)
-    face_template: LandmarkTemplate | None = None
-
-
-class SignupFace(CamelModel):
-    # A landmark template, or a legacy pixel template (plain number array)
-    template: LandmarkTemplate | list[float] = Field(union_mode="left_to_right")
-
-    @field_validator("template")
-    @classmethod
-    def limit_size(cls, v):
-        if isinstance(v, list) and not 1 <= len(v) <= MAX_FEATURES:
-            raise ValueError("Face template has an invalid size.")
-        return v
+    password: str = Field(max_length=128)
 
 
 class SignupRequest(_EmailModel):
@@ -58,11 +39,30 @@ class SignupRequest(_EmailModel):
     company: str | None = Field(default=None, max_length=160)
     password: str = Field(max_length=128)
     data_consent: bool = False
-    face: SignupFace | None = None
+
+
+class Liveness(CamelModel):
+    """What the browser's blink check saw. The server can't re-check a blink from a template,
+    so this records that the client ran it and refuses the request if it didn't pass."""
+
+    blink: bool
 
 
 class FaceEnrolRequest(CamelModel):
     template: LandmarkTemplate
+
+
+class FaceVerifyRequest(CamelModel):
+    template: LandmarkTemplate
+    liveness: Liveness
+
+
+class PendingResponse(CamelModel):
+    """Result of the password step (and of sign-up): a 5-minute token that only opens the face step."""
+
+    pending_token: str
+    face_enrolled: bool
+    expires_in: int  # seconds
 
 
 class FaceOut(CamelModel):

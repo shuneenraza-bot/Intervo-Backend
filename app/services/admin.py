@@ -44,7 +44,7 @@ from app.schemas.admin import (
 from app.schemas.base import to_ms
 from app.schemas.jobs import WeightedSkill
 from app.services.catalog import load_rules, weighted_skills
-from app.services.face import DEFAULT_FACE_THRESHOLD
+from app.services.face import DEFAULT_FACE_THRESHOLD, is_landmark_template
 
 RULE_DEFAULTS = {
     "weakThreshold": 60, "weakMinSessions": 2, "followUpBelow": 55, "defaultQuestions": 5,
@@ -416,11 +416,31 @@ def list_users(db: Session, role: str | None = None) -> list[AdminUserOut]:
     return [
         AdminUserOut(
             id=u.id, name=u.name, email=u.email, role=u.role, company=u.company,
-            face_enrolled=u.face_template is not None, created_at=to_ms(u.created_at),
+            face_enrolled=is_landmark_template(u.face_template), created_at=to_ms(u.created_at),
             sessions=sessions.get(u.id, 0), jobs=jobs.get(u.id, 0),
         )
         for u in db.scalars(query)
     ]
+
+
+def reset_face(db: Session, user_id: str) -> AdminUserOut:
+    """Clears the user's face template: open sessions stop working and they enrol again at the next sign-in."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise _error(status.HTTP_404_NOT_FOUND, "This user could not be found.")
+    user.face_template = None
+    user.face_enrolled_at = None
+    user.failed_face_attempts = 0
+    db.commit()
+    sessions = db.scalar(
+        select(func.count()).select_from(InterviewSession)
+        .where(InterviewSession.candidate_id == user.id, InterviewSession.status == "completed")
+    ) or 0
+    jobs = db.scalar(select(func.count()).select_from(Job).where(Job.employer_id == user.id)) or 0
+    return AdminUserOut(
+        id=user.id, name=user.name, email=user.email, role=user.role, company=user.company,
+        face_enrolled=False, created_at=to_ms(user.created_at), sessions=sessions, jobs=jobs,
+    )
 
 
 def stats(db: Session) -> AdminStatsOut:

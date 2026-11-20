@@ -16,10 +16,22 @@ uvicorn app.main:app --reload --port 8000
 
 ```powershell
 $api = "http://localhost:8000/api"
-$login = Invoke-RestMethod "$api/auth/login" -Method Post -ContentType "application/json" `
+$step = Invoke-RestMethod "$api/auth/login" -Method Post -ContentType "application/json" `
   -Body '{"email":"ayesha@intervo.demo","role":"candidate","password":"Demo@1234"}'
+# Step 2 is the face. Without a browser, send a fixed 276-number template (the demo script does the same).
+$template = @{ v = 2; method = "landmarks"; features = @(0..275 | ForEach-Object { 0.3 + ($_ % 23) * 0.05 }) }
+$pending = @{ Authorization = "Bearer $($step.pendingToken)" }
+if ($step.faceEnrolled) {
+  $body = @{ template = $template; liveness = @{ blink = $true } } | ConvertTo-Json -Depth 5
+  $login = Invoke-RestMethod "$api/auth/face/verify" -Method Post -Headers $pending -ContentType "application/json" -Body $body
+} else {
+  $body = @{ template = $template } | ConvertTo-Json -Depth 5
+  $login = Invoke-RestMethod "$api/auth/face/enroll" -Method Post -Headers $pending -ContentType "application/json" -Body $body
+}
 $h = @{ Authorization = "Bearer $($login.token)" }
 ```
+
+Sign-in needs the password and then the face. The first time, the account has no face, so the second call enrols this template; later runs verify it. This enrols a made-up face on the demo account, which is fine for a demo.
 
 ## 2. Start
 

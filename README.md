@@ -29,7 +29,7 @@ Status at the 30% evaluation. "Where it runs" matters because part of the system
 | # | Objective | Feature | Where it runs | Status |
 |---|---|---|---|---|
 | 1 | Secure, role-based access | Sign up and sign in for candidates and employers, seeded admin, JWT, argon2 password hashes, attempt limits | Backend | ✅ Done |
-| 2 | Convenient sign-in | Face ID as an alternative to the password, with a blink liveness check | Capture in browser (MediaPipe), matching on backend | ✅ Done (prototype matcher) |
+| 2 | Two-factor sign-in | Password first, then face verification with a blink liveness check. Both are required for every role, at sign-up and sign-in | Capture in browser (MediaPipe), matching on backend | ✅ Done (prototype matcher) |
 | 3 | CV analysis and skill gap | Parse PDF/DOCX/TXT, extract skills, compare with a role template or a pasted job description | Browser (pdf.js) | ✅ Done in browser · ⏳ server-side with Gemini |
 | 4 | Mock interviews | Text, voice and video modes; questions chosen from weaknesses, CV gaps and the role's key skills; follow-up questions | Browser, and backend (`/api/interviews`) | ✅ Done in browser and on the server |
 | 5 | Answer evaluation and feedback | Per-criterion scores against the admin rubric | Browser (rules); backend (Gemini with rule-based fallback) | ✅ Done |
@@ -170,7 +170,7 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 
 ### Done
 
-- **Authentication on the real backend.** Sign up, two-step sign in with a password **or** Face ID, JWT sessions, argon2 hashes, lockout after repeated failures.
+- **Authentication on the real backend.** Sign up, two-factor sign in (password, then face verification, both required), JWT sessions, argon2 hashes, lockout after repeated failures.
 - **Employer module on the real backend.** Create, edit, close and reopen job postings with weighted skills and a minimum CV match. Candidates apply with consent. Employers see applicants ranked by CV skill match (matched, partial and missing skills, experience and education checks, a short CV summary) and can shortlist or decline. No interview data reaches employers.
 - **Admin configuration on the real backend.** Admins manage domains, roles, skills, question templates, evaluation criteria, scoring rules and see users and counts, all validated and saved to PostgreSQL (`/api/admin/*`). The interview engine, CV matching, evaluation and the employer list read configuration from the database on every request, so changes apply immediately.
 - **Candidate sync.** A candidate's skills and CV summary are saved to PostgreSQL so the ranking uses real data (their session scores are kept for the candidate's own progress, not for employers).
@@ -178,7 +178,7 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 - **Mock interviews** (frontend): text, voice and video, with follow-up questions and presentation cues.
 - **Dashboards** (frontend): candidate overview and progress, employer hiring overview, admin configuration.
 - **Database.** 14 tables with constraints and Alembic migrations, a seed script and an [ERD](docs/ERD.md).
-- **Tests.** 150 automated API tests: sign up, sign in, Face ID, lockout, jobs, applications, CV-only ranking and privacy rules, the interview engine and the admin endpoints.
+- **Tests.** 157 automated API tests: two-factor sign up and sign in, face verification, lockouts, admin face reset, jobs, applications, CV-only ranking and privacy rules, the interview engine and the admin endpoints.
 
 ### Next steps
 
@@ -195,7 +195,7 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 These are stated plainly so the evaluation reflects what is really built.
 
 - **Answer scoring is rule-based.** Answers are scored in the browser from keywords, length and structure. It is consistent and explainable, but it does not understand meaning. Gemini will replace it. Scores are a practice aid, not ground truth.
-- **Face matching is a prototype.** The browser measures ratios between face landmarks and the server compares them with a mean-difference formula against a threshold. The blink check stops a printed photo, but this is not a trained face-recognition model and has not been measured for false accepts. It should not be the only protection for a real account; the password always remains available.
+- **Face matching is a prototype.** The browser measures ratios between face landmarks and the server compares them with a mean-difference formula against a threshold. The blink check stops a printed photo, but this is not a trained face-recognition model and has not been measured for false accepts. It is the second factor next to the password, not a replacement for it. An admin can reset a user's face if the camera stops working for them.
 - **CV parsing and interviews still run in the browser.** The server has no `/cv`, `/jd` or `/interview` endpoints yet. Answer text and the full CV stay in the browser's `localStorage`, so that history does not move to another browser or device. Only skills, a CV summary and per-answer scores (with the video cues) reach the database.
 - **No account deletion endpoint yet.** "Delete history" and "Delete account" in the app clear the browser copy only. The rows in PostgreSQL stay until a delete endpoint is added. The sharing switch is enforced on the server.
 - **Admin screens need the `admin` module.** Without `admin` in the frontend's `VITE_BACKEND_MODULES` the admin console edits only the browser's copy. Employer experience and education checks are read from the job description text (for example "2+ years"), not from separate job fields.
@@ -210,18 +210,19 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | Method | Path | Who | Purpose |
 |---|---|---|---|
 | GET | `/api/health` | public | Server and database check |
-| POST | `/api/auth/lookup` | public | Sign-in step 1: does the account exist, is Face ID enabled |
-| POST | `/api/auth/signup` | public | Create a candidate or employer account |
-| POST | `/api/auth/login` | public | Sign in with a password **or** a face template |
-| GET | `/api/auth/me` | signed in | The current user |
-| PUT | `/api/auth/face` | signed in | Enrol or replace Face ID. Body: `{ "template": { "v": 2, "method": "landmarks", "features": [...] } }` |
-| DELETE | `/api/auth/face` | signed in | Remove Face ID |
+| POST | `/api/auth/signup` | public | Create a candidate or employer account. Returns `{ pendingToken, faceEnrolled: false, expiresIn }`; the face must be enrolled before there is a full token |
+| POST | `/api/auth/login` | public | Step 1. Body: `{ email, role, password }`. Returns `{ pendingToken, faceEnrolled, expiresIn }` (a 5-minute `face_pending` token), never a full token |
+| POST | `/api/auth/face/verify` | face-pending token | Step 2 for an enrolled account. Body: `{ template, liveness: { blink: true } }`. Returns `{ token, user }` (the full token) |
+| POST | `/api/auth/face/enroll` | face-pending token | Step 2 for an account without a face. Body: `{ template }`. Returns `{ token, user }`; `409` if a face is already enrolled |
+| GET | `/api/auth/me` | signed in (full token) | The current user |
+| PUT | `/api/auth/face` | signed in (full token) | Re-enrol: replace the face template. There is no delete. Body: `{ "template": { "v": 2, "method": "landmarks", "features": [...] } }` |
 | GET | `/api/config` | signed in | Domains, skills, roles, questions, criteria and rules |
 | GET, POST | `/api/admin/domains`, `/roles`, `/skills`, `/questions` | admin | List and create. Skills have `aliases`, `related`, `tip`; roles have weighted skills (1 to 3); questions have `skill`, `type`, `text`, `keywords`, `followUp` |
 | PUT, DELETE | `/api/admin/domains/{id}`, `/roles/{id}`, `/skills/{id}`, `/questions/{id}` | admin | Edit or delete. `404` unknown id, `409` duplicate name or still in use (for example `Skill is used by a role`) |
 | GET, PUT | `/api/admin/criteria` | admin | Weight 1 to 3 and `enabled` per criterion |
 | GET, PUT | `/api/admin/rules` | admin | `weakThreshold`, `weakMinSessions`, `followUpBelow`, `defaultQuestions`, `faceThreshold`, each range-checked |
 | GET | `/api/admin/users`, `/api/admin/stats` | admin | Accounts (no password hashes or face templates) and the counts for the overview |
+| POST | `/api/admin/users/{id}/reset-face` | admin | Clears the user's face template. Their open sessions stop working and they enrol a new face at the next sign-in |
 | GET | `/api/jobs` | signed in | `{ jobs, applications }`. Open jobs; employers also get their own closed jobs, `applicantCount` and the applications on their jobs |
 | POST | `/api/jobs` | employer | Create a job with weighted skills and success criteria |
 | PUT | `/api/jobs/{id}` | job owner | Replace a job |
@@ -267,10 +268,13 @@ Interview scores are never part of the response: no sessions, evidence, practice
 
 ### Sign-in rules
 
-- Password and Face ID are alternatives. The login body holds `password` or `faceTemplate`, never both.
-- Face ID compares the live template with the stored one: `similarity = max(0, 1 - mean(|a - b|) / 0.12)`. It is accepted when the similarity is at least `faceThreshold` in the `scoring_rules` row (0.55 after seeding).
-- 5 wrong passwords in a row lock all sign-in for that account for 60 seconds (`429` with a `Retry-After` header).
-- 3 failed Face ID attempts lock Face ID for that account until a password sign-in succeeds.
+- Sign-in has two required steps, for every role. `POST /auth/login` checks the password and returns a 5-minute `face_pending` token (`scope` claim). `POST /auth/face/verify` (enrolled) or `POST /auth/face/enroll` (not enrolled) turns it into the full token.
+- Every other endpoint accepts only full tokens. A `face_pending` token gets `401` there, and a full token gets `401` on the two face-step endpoints. An account with no face enrolled gets `401` on every endpoint except the face step, which is how an admin reset takes effect immediately.
+- Sign-up creates the account without a face and returns a pending token; the face must be enrolled before the first full token.
+- Face verification compares the live template with the stored one: `similarity = max(0, 1 - mean(|a - b|) / 0.12)`. It is accepted when the similarity is at least `faceThreshold` in the `scoring_rules` row (0.55 after seeding). The request must also carry `liveness: { blink: true }`. The blink is detected in the browser; the server can't re-check a blink from a template, so it only refuses requests that say the check failed.
+- 5 wrong passwords in a row block that account's sign-in for 60 seconds (`429` with a `Retry-After` header).
+- 3 failed face attempts block that account's sign-in for 5 minutes (`429`, `Retry-After: 300`). The pending token is spent, so after the 5 minutes the user starts again with the password.
+- Only landmark templates (numbers) are stored. Face images are never sent to the server, stored or logged. Templates are not encrypted at rest yet.
 - Passwords are stored as argon2 hashes. Tokens are HS256 JWTs that expire after `JWT_EXPIRE_MINUTES`.
 
 ## Database

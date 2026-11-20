@@ -17,7 +17,7 @@ from app.models import (
     Skill,
 )
 from app.services.matching import cv_fit
-from tests.conftest import candidate_payload, employer_payload
+from tests.conftest import candidate_payload, employer_payload, signup_full
 
 RULES = {
     "weakThreshold": 60, "weakMinSessions": 2, "followUpBelow": 55, "defaultQuestions": 5,
@@ -68,9 +68,7 @@ def catalog(db):
 
 def signup(client, payload) -> tuple[dict, dict]:
     """Returns (user, auth headers)."""
-    res = client.post("/api/auth/signup", json=payload)
-    assert res.status_code == 201, res.text
-    body = res.json()
+    body = signup_full(client, payload)
     return body["user"], {"Authorization": f"Bearer {body['token']}"}
 
 

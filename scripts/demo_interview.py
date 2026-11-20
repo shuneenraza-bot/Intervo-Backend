@@ -162,7 +162,15 @@ def main() -> int:
 
     with httpx.Client(base_url=args.base + "/api", timeout=120) as client:
         hr("1. Login")
-        auth = call(client, "POST", "/auth/login", json={"email": EMAIL, "password": PASSWORD, "role": "candidate"})
+        step = call(client, "POST", "/auth/login", json={"email": EMAIL, "password": PASSWORD, "role": "candidate"})
+        # Sign-in is password, then face. There is no camera here, so send a fixed made-up template:
+        # the first run enrols it on the demo account, later runs verify it.
+        template = {"v": 2, "method": "landmarks", "features": [round(0.3 + (i % 23) * 0.05, 4) for i in range(276)]}
+        client.headers["Authorization"] = f"Bearer {step['pendingToken']}"  # never printed
+        if step["faceEnrolled"]:
+            auth = call(client, "POST", "/auth/face/verify", json={"template": template, "liveness": {"blink": True}})
+        else:
+            auth = call(client, "POST", "/auth/face/enroll", json={"template": template})
         client.headers["Authorization"] = f"Bearer {auth['token']}"  # never printed
         print(f"  logged in as {auth['user']['email']} ({auth['user']['role']})")
 
