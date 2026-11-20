@@ -13,6 +13,7 @@ from app.schemas.jobs import (
     JobsResponse,
     JobStatusIn,
 )
+from app.services import applications as application_service
 from app.services import jobs as job_service
 from app.services.catalog import load_config
 
@@ -66,8 +67,6 @@ def candidates(job_id: str, user: Employer, db: DbSession) -> dict:
     return job_service.ranked_candidates(db, job_id, user)
 
 
-# API.md uses PATCH /applications/{id}; the /status form is an alias.
-@router.patch("/applications/{application_id}", response_model=ApplicationOut)
-@router.patch("/applications/{application_id}/status", response_model=ApplicationOut, include_in_schema=False)
+@router.patch("/applications/{application_id}/status", response_model=ApplicationOut)
 def set_application_status(application_id: str, body: ApplicationStatusIn, user: Employer, db: DbSession):
-    return job_service.set_application_status(db, application_id, user, body.status)
+    return application_service.set_application_status(db, application_id, user, body.status, body.message)

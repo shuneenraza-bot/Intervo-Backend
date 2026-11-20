@@ -10,11 +10,13 @@ from app.models.catalog import (
     Skill,
 )
 from app.models.interview import InterviewSession, SessionAnswer
-from app.models.job import Application, Job, JobSkill
+from app.models.job import Application, ApplicationStatusEvent, Job, JobSkill
+from app.models.notification import Notification
 from app.models.user import CandidateProfile, User
 
 __all__ = [
     "Application",
+    "ApplicationStatusEvent",
     "CandidateProfile",
     "Domain",
     "EvaluationCriterion",
@@ -22,6 +24,7 @@ __all__ = [
     "Job",
     "JobRole",
     "JobSkill",
+    "Notification",
     "QuestionTemplate",
     "RoleSkill",
     "ScoringRules",

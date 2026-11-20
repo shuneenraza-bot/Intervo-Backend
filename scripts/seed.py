@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 from app.db import SessionLocal, new_id
 from app.models import (
     Application,
+    ApplicationStatusEvent,
     CandidateProfile,
     Domain,
     EvaluationCriterion,
@@ -283,7 +284,8 @@ def seed() -> None:
 
         for id_, job_id, candidate_id, days in APPLICATIONS:
             add_if_missing(Application, id_, lambda: Application(
-                id=id_, job_id=job_id, candidate_id=candidate_id, consent=True, status="new", created_at=days_ago(days)))
+                id=id_, job_id=job_id, candidate_id=candidate_id, consent=True, status="applied", created_at=days_ago(days),
+                history=[ApplicationStatusEvent(id=f"hist-{id_}", status="applied", created_at=days_ago(days))]))
 
         question_for = {}
         for q in QUESTIONS:

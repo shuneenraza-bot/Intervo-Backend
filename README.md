@@ -62,7 +62,7 @@ flowchart LR
         API --> SVC --> ORM
     end
 
-    DB[("PostgreSQL 18<br/>14 tables")]
+    DB[("PostgreSQL 18<br/>16 tables")]
     AI["Gemini: answer evaluation, CV extraction<br/>Whisper: speech to text"]
 
     UI -- "HTTP, JSON, Bearer token" --> API
@@ -177,8 +177,8 @@ Two more demo candidates, `bilal@intervo.demo` and `sana@intervo.demo` (password
 - **CV analyzer** (frontend): PDF, DOCX or pasted text, skill extraction, weighted skill-gap against a role or job description.
 - **Mock interviews** (frontend): text, voice and video, with follow-up questions and presentation cues.
 - **Dashboards** (frontend): candidate overview and progress, employer hiring overview, admin configuration.
-- **Database.** 14 tables with constraints and Alembic migrations, a seed script and an [ERD](docs/ERD.md).
-- **Tests.** 157 automated API tests: two-factor sign up and sign in, face verification, lockouts, admin face reset, jobs, applications, CV-only ranking and privacy rules, the interview engine and the admin endpoints.
+- **Database.** 16 tables with constraints and Alembic migrations, a seed script and an [ERD](docs/ERD.md).
+- **Tests.** 169 automated API tests: two-factor sign up and sign in, face verification, lockouts, admin face reset, jobs, applications, the shortlist flow (notifications, accept/decline, contact sharing), CV-only ranking and privacy rules, the interview engine and the admin endpoints.
 
 ### Next steps
 
@@ -229,8 +229,14 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | PATCH | `/api/jobs/{id}/status` | job owner | `{ "status": "open" \| "closed" }` |
 | POST | `/api/jobs/{id}/apply` | candidate | `{ "consent": true }`. Consent also turns on profile sharing |
 | DELETE | `/api/jobs/{id}/apply` | candidate | Withdraw the application |
-| PATCH | `/api/applications/{id}` | job owner | `{ "status": "new" \| "shortlisted" \| "declined" }` |
-| GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by CV skill match. No interview data |
+| PATCH | `/api/applications/{id}/status` | job owner | `{ "status": "shortlisted" \| "not_progressing", "message"?: string (max 500) }`. Notifies the candidate. `409` once the candidate has answered, `403` for another employer |
+| GET | `/api/applications/mine` | candidate | Own applications: job, company, `status`, `employerMessage`, `candidateNote`, `appliedAt`, `updatedAt`, `history`. `employer` (name, company, email) only after they accepted |
+| POST | `/api/applications/{id}/respond` | candidate | `{ "decision": "accept" \| "decline", "note"?: string (max 500) }`. Only while `shortlisted`, only once (`409` otherwise), only on their own application (`403`). Notifies the employer |
+| GET | `/api/notifications` | signed in | Own notifications, newest first (`?limit=` up to 100): `{ id, type, title, body, link, createdAt, readAt, read }` |
+| GET | `/api/notifications/unread-count` | signed in | `{ "count": n }` |
+| POST | `/api/notifications/{id}/read` | signed in | Mark one read (`404` for someone else's) |
+| POST | `/api/notifications/read-all` | signed in | Mark all of your own read |
+| GET | `/api/jobs/{id}/candidates` | job owner | Applicants ranked by CV skill match. No interview data. `candidate` is `{ id, name }`; a `contact` object (name, email, phone from the CV if any) is added only when the application is `accepted` |
 | PUT | `/api/profile` | candidate | Save `{ skills, cv: { education, experienceYears, projects } \| null, shareWithEmployers }` |
 | POST | `/api/sessions` | candidate | Save a finished practice session's scores. Re-sending the same `id` returns the stored session with `200` |
 | POST | `/api/interviews` | candidate | Start an interview: `{ roleId \| jobId, mode, count }`. Questions are chosen on the server (weaknesses, CV gaps, role skills, one behavioural) with a `reason` each |
@@ -259,12 +265,22 @@ Walkthrough: [docs/run-an-interview.md](docs/run-an-interview.md). Selection and
 
 - `match`: the job's weighted skills against the candidate's CV skills as `matched`, `partial` (a related skill earns half the weight) and `missing` lists, the `percentage`, `checks` for experience and education, and `meetsCriteria`, which is true when the percentage reaches the job's minimum CV match (`success.minMatch`). The checks are read from the job description ("2+ years", "Bachelor's degree") and compared with the CV.
 - `cvSummary`: top degree, years of experience and number of projects.
-- `candidate` (id, name, email) and `application`.
+- `candidate` (id, name) and `application`. A `contact` object is added only after the candidate accepts a shortlist (see below).
 
 Interview scores are never part of the response: no sessions, evidence, practice consistency, weak skills, session counts or answer text. Jobs have no minimum interview score.
 
 - Only applicants with `consent = true` on the application **and** `share_with_employers = true` on their profile are returned. Everyone else is only counted in `hidden`.
-- Interview data, answer text, video indicators, face templates and CV contact details are never sent to employers.
+- Interview data, answer text, video indicators, face templates and CV contact details are never sent to employers, except the name, email and phone of a candidate who accepted a shortlist.
+
+### Shortlist flow, contact sharing and notifications
+
+`applied → shortlisted → accepted | declined_by_candidate`; the employer can also set `not_progressing`. Code: `app/services/applications.py`, `notifications.py`.
+
+- The job owner shortlists (optional message, 500 characters) or stops an application with `PATCH /api/applications/{id}/status`. Only the candidate can accept or decline, with `POST /api/applications/{id}/respond`, once, and only while the status is `shortlisted`.
+- Each change adds a row to `application_status_history` (time, `employer_message`, `candidate_note`).
+- **Contact sharing.** Before the candidate accepts, neither side gets any contact data: the employer's candidate list has `candidate: { id, name }` and no email or phone, and `GET /api/applications/mine` has `employer: null`. After they accept, the employer's entry gets `contact: { name, email, phone }` (the phone is from the CV, `null` if there is none) and the candidate gets the employer's name, company and email. Declining shares nothing. The applicant's name is still shown before acceptance so the employer can tell applicants apart; hide it too if you want blind screening.
+- **Notifications** are created for: candidate shortlisted, candidate marked not progressing, candidate accepts, candidate declines. Each user reads only their own (`/api/notifications`, `/unread-count`, `/{id}/read`, `/read-all`).
+- Applications that were `new` or `declined` become `applied` and `not_progressing` in the migration. Run `alembic upgrade head` after pulling this change.
 
 ### Sign-in rules
 
@@ -279,11 +295,11 @@ Interview scores are never part of the response: no sessions, evidence, practice
 
 ## Database
 
-14 tables, all with `created_at` and `updated_at`. See **[docs/ERD.md](docs/ERD.md)** for the diagram and a description of each entity.
+16 tables. All have `created_at`; all but the append-only `application_status_history` and `notifications` also have `updated_at`. See **[docs/ERD.md](docs/ERD.md)** for the diagram and a description of each entity.
 
 - **Accounts:** `users`, `candidate_profiles`
 - **Admin configuration:** `domains`, `skills`, `job_roles`, `role_skills`, `question_templates`, `evaluation_criteria`, `scoring_rules`
-- **Jobs:** `jobs`, `job_skills`, `applications`
+- **Jobs:** `jobs`, `job_skills`, `applications`, `application_status_history`, `notifications`
 - **Interviews:** `interview_sessions`, `session_answers`
 
 IDs are strings (`cand-3f9a1c2b7d4e`, `frontend`, `q1`) because the frontend uses string IDs. The API sends timestamps as Unix epoch milliseconds.

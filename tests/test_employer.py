@@ -233,7 +233,7 @@ def test_apply_withdraw_and_status(client, db, employer, ayesha):
     assert res.status_code == 201, res.text
     application = res.json()
     assert application["jobId"] == job["id"] and application["candidateId"] == user["id"]
-    assert application["consent"] is True and application["status"] == "new"
+    assert application["consent"] is True and application["status"] == "applied"
     assert isinstance(application["date"], int)
     db.expire_all()
     assert db.get(CandidateProfile, user["id"]).share_with_employers is True  # consent turns sharing on
@@ -242,12 +242,14 @@ def test_apply_withdraw_and_status(client, db, employer, ayesha):
     assert client.post(url, json={"consent": True}, headers=employer[1]).status_code == 403  # employers can't apply
 
     # the job owner moves it through the pipeline (API.md path and the /status alias)
-    res = client.patch(f"/api/applications/{application['id']}", json={"status": "shortlisted"}, headers=employer[1])
+    url_status = f"/api/applications/{application['id']}/status"
+    res = client.patch(url_status, json={"status": "shortlisted"}, headers=employer[1])
     assert res.status_code == 200 and res.json()["status"] == "shortlisted"
-    res = client.patch(f"/api/applications/{application['id']}/status", json={"status": "declined"}, headers=employer[1])
-    assert res.status_code == 200 and res.json()["status"] == "declined"
-    assert client.patch(f"/api/applications/{application['id']}", json={"status": "hired"}, headers=employer[1]).status_code == 422
-    assert client.patch(f"/api/applications/{application['id']}", json={"status": "new"}, headers=headers).status_code == 403
+    res = client.patch(url_status, json={"status": "not_progressing"}, headers=employer[1])
+    assert res.status_code == 200 and res.json()["status"] == "not_progressing"
+    assert client.patch(url_status, json={"status": "hired"}, headers=employer[1]).status_code == 422
+    assert client.patch(url_status, json={"status": "accepted"}, headers=employer[1]).status_code == 422  # only the candidate accepts
+    assert client.patch(url_status, json={"status": "shortlisted"}, headers=headers).status_code == 403
 
     assert client.delete(url, headers=headers).status_code == 204
     assert client.get("/api/jobs", headers=headers).json()["applications"] == []
@@ -273,7 +275,7 @@ def test_employer_sees_only_the_cv_match(client, employer, ayesha):
     entry = body["candidates"][0]
     # Exactly these keys: no sessions, profile, fit/factors, evidence or any interview score.
     assert set(entry) == {"application", "candidate", "cvSummary", "match"}
-    assert entry["candidate"] == {"id": ayesha[0]["id"], "name": "Ayesha Khan", "email": "ayesha@example.com"}
+    assert entry["candidate"] == {"id": ayesha[0]["id"], "name": "Ayesha Khan"}  # no email or phone before they accept
     assert entry["application"]["consent"] is True
 
     match = entry["match"]
@@ -346,8 +348,7 @@ def test_another_employer_gets_403(client, employer, other_employer, ayesha):
     assert "Ayesha" not in res.text
     assert client.put(f"/api/jobs/{job['id']}", json={**JOB, "title": "Hijacked"}, headers=rival).status_code == 403
     assert client.patch(f"/api/jobs/{job['id']}/status", json={"status": "closed"}, headers=rival).status_code == 403
-    assert client.patch(f"/api/applications/{application['id']}", json={"status": "declined"}, headers=rival).status_code == 403
-    assert client.patch(f"/api/applications/{application['id']}/status", json={"status": "declined"}, headers=rival).status_code == 403
+    assert client.patch(f"/api/applications/{application['id']}/status", json={"status": "shortlisted"}, headers=rival).status_code == 403
 
     # candidates can't read the list either, and nothing was changed
     assert client.get(f"/api/jobs/{job['id']}/candidates", headers=ayesha[1]).status_code == 403
@@ -355,7 +356,7 @@ def test_another_employer_gets_403(client, employer, other_employer, ayesha):
     assert client.get("/api/jobs/job-missing/candidates", headers=employer[1]).status_code == 404
     mine = client.get("/api/jobs", headers=employer[1]).json()
     assert mine["jobs"][0]["title"] == JOB["title"] and mine["jobs"][0]["status"] == "open"
-    assert mine["applications"][0]["status"] == "new"
+    assert mine["applications"][0]["status"] == "applied"
 
 
 def test_applicant_without_consent_is_hidden(client, db, employer, ayesha):

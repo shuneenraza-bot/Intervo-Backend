@@ -25,7 +25,7 @@ GROUPS = {
         "domains", "job_roles", "skills", "role_skills",
         "question_templates", "evaluation_criteria", "scoring_rules",
     ],
-    "Jobs": ["jobs", "job_skills", "applications"],
+    "Jobs": ["jobs", "job_skills", "applications", "application_status_history", "notifications"],
     "Interviews": ["interview_sessions", "session_answers"],
 }
 
@@ -41,7 +41,9 @@ DESCRIPTIONS = {
     "scoring_rules": "A single row of admin-set rules: weakness threshold, follow-up trigger, Face ID match threshold and the scoring thresholds.",
     "jobs": "A job posting by an employer, with success criteria (minimum interview score and minimum CV match).",
     "job_skills": "The skills a job posting requires and their weights (1 to 3), used for the CV match.",
-    "applications": "A candidate's application to a job, with their consent to share evidence and the employer's decision.",
+    "applications": "A candidate's application to a job: consent to share the CV match and the current status (applied, shortlisted, accepted, declined_by_candidate or not_progressing).",
+    "application_status_history": "One row per status change of an application, with the time, the employer's message and the candidate's note.",
+    "notifications": "An in-app notification for one user (shortlisted, not progressing, accepted, declined) with the page it links to and when it was read.",
     "interview_sessions": "One finished mock interview: candidate, role, mode (text, voice or video), overall score and date.",
     "session_answers": "One question inside a session: the skill tested, score, per-criterion scores, video cues and follow-up.",
 }
@@ -60,6 +62,8 @@ LABELS = {
     ("job_skills", "skill_id"): "is required by",
     ("applications", "job_id"): "receives",
     ("applications", "candidate_id"): "submits",
+    ("application_status_history", "application_id"): "records",
+    ("notifications", "user_id"): "receives",
     ("interview_sessions", "candidate_id"): "practises in",
     ("interview_sessions", "role_id"): "is practised in",
     ("session_answers", "session_id"): "contains",
@@ -204,13 +208,17 @@ def build() -> str:
         "between roles and skills, and between jobs and skills, and carry the weight of each skill.",
         "- `applications` resolves the many-to-many relationship between candidates and jobs. A candidate can apply "
         "to a job only once (unique on `job_id` + `candidate_id`).",
+        "- An application moves applied -> shortlisted -> accepted or declined_by_candidate; the employer can also "
+        "set not_progressing. Every move is a row in `application_status_history`. The candidate's email and phone "
+        "are shared with the employer only while the status is `accepted`; this is enforced in the API, not the schema.",
         "- `users` holds all three roles in one table, separated by the `role` column. Only candidates have a "
         "`candidate_profiles` row.",
         "- `jobs.employer_id` may be empty for listings that are not owned by an Intervo employer account.",
         "- `scoring_rules` has exactly one row (`id = 1`), enforced by a check constraint.",
         "- JSON columns (`jsonb`) hold lists and nested objects that are always read as a whole: skill aliases, "
         "the parsed CV, per-criterion scores and the Face ID landmark template.",
-        "- Every table has `created_at` and `updated_at`. IDs are short strings such as `cand-3f9a1c2b7d4e`.",
+        "- Every table has `created_at`; all except `application_status_history` and `notifications` (append-only "
+        "rows) also have `updated_at`. IDs are short strings such as `cand-3f9a1c2b7d4e`.",
         "",
     ]
     return "\n".join(out)

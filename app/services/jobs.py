@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.db import new_id
 from app.models import (
     Application,
+    ApplicationStatusEvent,
     CandidateProfile,
     Job,
     JobRole,
@@ -58,11 +59,13 @@ def list_jobs(db: Session, user: User) -> JobsResponse:
 
     if user.role == "employer":
         applications = db.scalars(
-            select(Application).join(Job).where(Job.employer_id == user.id).order_by(Application.created_at)
+            select(Application).join(Job).where(Job.employer_id == user.id)
+            .options(selectinload(Application.history)).order_by(Application.created_at)
         ).all()
     elif user.role == "candidate":
         applications = db.scalars(
-            select(Application).where(Application.candidate_id == user.id).order_by(Application.created_at)
+            select(Application).where(Application.candidate_id == user.id)
+            .options(selectinload(Application.history)).order_by(Application.created_at)
         ).all()
     else:
         applications = []
@@ -146,7 +149,8 @@ def apply_to_job(db: Session, job_id: str, candidate: User, consent: bool) -> Ap
     if db.scalars(select(Application).where(Application.job_id == job_id, Application.candidate_id == candidate.id)).first():
         raise _error(status.HTTP_409_CONFLICT, already)
 
-    application = Application(id=new_id("app"), job_id=job_id, candidate_id=candidate.id, consent=consent, status="new")
+    application = Application(id=new_id("app"), job_id=job_id, candidate_id=candidate.id, consent=consent, status="applied")
+    application.history.append(ApplicationStatusEvent(id=new_id("hist"), status="applied"))
     db.add(application)
     if consent:
         # Consent means "share my CV skill match with this employer" (never interview results).
@@ -174,19 +178,6 @@ def withdraw_application(db: Session, job_id: str, candidate: User) -> None:
         db.commit()
 
 
-def set_application_status(db: Session, application_id: str, employer: User, new_status: str) -> ApplicationOut:
-    application = db.scalars(
-        select(Application).where(Application.id == application_id).options(selectinload(Application.job))
-    ).first()
-    if application is None:
-        raise _error(status.HTTP_404_NOT_FOUND, "This application could not be found.")
-    if application.job.employer_id != employer.id:
-        raise _error(status.HTTP_403_FORBIDDEN, "Only the employer who posted this job can do that.")
-    application.status = new_status
-    db.commit()
-    return ApplicationOut.from_application(application)
-
-
 # ---------- ranked candidates ----------
 
 def _requirement_checks(job: JobOut, summary: dict | None, profile: CandidateProfile) -> list[dict]:
@@ -196,6 +187,13 @@ def _requirement_checks(job: JobOut, summary: dict | None, profile: CandidatePro
     jd = cv_rules.parse_jd(job.description, [])
     degrees = [e.get("degree") or "" for e in (profile.cv or {}).get("education") or []]
     return cv_rules.requirement_checks(jd, (summary or {}).get("experienceYears") or 0, degrees)
+
+
+def _contact(user: User, profile: CandidateProfile) -> dict:
+    """Name, email and phone for the contact card. The phone comes from the CV, if there is one."""
+    cv = profile.parsed_cv or profile.cv or {}
+    phone = ((cv.get("contact") or {}).get("phone") or "").strip()
+    return {"name": user.name, "email": user.email, "phone": phone or None}
 
 
 def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
@@ -210,7 +208,7 @@ def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
     applications = db.scalars(
         select(Application)
         .where(Application.job_id == job_id)
-        .options(selectinload(Application.candidate).selectinload(User.profile))
+        .options(selectinload(Application.candidate).selectinload(User.profile), selectinload(Application.history))
         .order_by(Application.created_at)
     ).all()
     visible = [
@@ -224,13 +222,16 @@ def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
     for application in visible:
         user, profile = application.candidate, application.candidate.profile
         summary = cv_summary(profile.cv)
-        candidates.append({
+        entry = {
             "application": ApplicationOut.from_application(application).model_dump(by_alias=True),
-            "candidate": {"id": user.id, "name": user.name, "email": user.email},
+            "candidate": {"id": user.id, "name": user.name},
             "cvSummary": summary,
             "match": cv_fit(job_dict, {"skills": profile.skills or []}, skill_config,
                             _requirement_checks(job_out, summary, profile)),
-        })
+        }
+        if application.status == "accepted":  # the candidate said yes: now they can be contacted
+            entry["contact"] = _contact(user, profile)
+        candidates.append(entry)
     candidates.sort(key=lambda c: c["match"]["percentage"], reverse=True)  # stable: ties keep application order
 
     return {"job": job_dict, "hidden": len(applications) - len(visible), "candidates": candidates}

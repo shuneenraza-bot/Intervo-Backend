@@ -7,7 +7,7 @@ from app.schemas.base import CamelModel, to_ms
 from app.services.catalog import weighted_skills
 
 JobStatus = Literal["open", "closed"]
-ApplicationStatus = Literal["new", "shortlisted", "declined"]
+EmployerDecision = Literal["shortlisted", "not_progressing"]
 
 
 class WeightedSkill(CamelModel):
@@ -81,7 +81,10 @@ class ApplyIn(CamelModel):
 
 
 class ApplicationStatusIn(CamelModel):
-    status: ApplicationStatus
+    """The employer's move: shortlist (with an optional message) or stop the application."""
+
+    status: EmployerDecision
+    message: str | None = Field(default=None, max_length=500)
 
 
 class ApplicationOut(CamelModel):
@@ -91,12 +94,19 @@ class ApplicationOut(CamelModel):
     date: int
     consent: bool
     status: str
+    employer_message: str | None = None
+    candidate_note: str | None = None
+    updated_at: int | None = None  # when the status last changed
 
     @classmethod
     def from_application(cls, application: Application) -> "ApplicationOut":
+        events = application.history
         return cls(
             id=application.id, job_id=application.job_id, candidate_id=application.candidate_id,
             date=to_ms(application.created_at), consent=application.consent, status=application.status,
+            employer_message=next((e.employer_message for e in reversed(events) if e.employer_message), None),
+            candidate_note=next((e.candidate_note for e in reversed(events) if e.candidate_note), None),
+            updated_at=to_ms(events[-1].created_at) if events else to_ms(application.created_at),
         )
 
 

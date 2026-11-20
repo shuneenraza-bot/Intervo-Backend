@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String, Text, UniqueConstraint, false
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, TimestampMixin
@@ -64,12 +65,17 @@ class JobSkill(TimestampMixin, Base):
 
 
 class Application(TimestampMixin, Base):
-    """created_at is the application date."""
+    """created_at is the application date. Flow: applied -> shortlisted -> accepted |
+    declined_by_candidate; the employer can also set not_progressing. Every change is kept in
+    application_status_history."""
 
     __tablename__ = "applications"
     __table_args__ = (
         UniqueConstraint("job_id", "candidate_id"),
-        CheckConstraint("status IN ('new', 'shortlisted', 'declined')", name="status"),
+        CheckConstraint(
+            "status IN ('applied', 'shortlisted', 'accepted', 'declined_by_candidate', 'not_progressing')",
+            name="status",
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
@@ -80,7 +86,28 @@ class Application(TimestampMixin, Base):
         String(40), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
     consent: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
-    status: Mapped[str] = mapped_column(String(20), default="new", server_default="new")
+    status: Mapped[str] = mapped_column(String(30), default="applied", server_default="applied")
 
     job: Mapped[Job] = relationship(back_populates="applications")
     candidate: Mapped[User] = relationship()
+    history: Mapped[list[ApplicationStatusEvent]] = relationship(
+        back_populates="application", cascade="all, delete-orphan",
+        order_by="ApplicationStatusEvent.created_at, ApplicationStatusEvent.id",
+    )
+
+
+class ApplicationStatusEvent(Base):
+    """One row per status change, with the employer's message or the candidate's note."""
+
+    __tablename__ = "application_status_history"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    application_id: Mapped[str] = mapped_column(
+        String(40), ForeignKey("applications.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[str] = mapped_column(String(30))
+    employer_message: Mapped[str | None] = mapped_column(Text)
+    candidate_note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    application: Mapped[Application] = relationship(back_populates="history")
