@@ -135,8 +135,10 @@ def _response(profile: CandidateProfile) -> CVResponse:
 
 def analyze_and_save(db: Session, user: User, text: str, file_name: str, data: bytes) -> CVResponse:
     skills = load_skills(db)
-    # Only the CV text without contact lines is sent to an AI provider.
-    llm, provider = run_json_task(cv_prompt(strip_contact(text)), LLMCV, task="cv", text=text, skills=skills)
+    # Only the CV text without contact details, address and the person's name goes to an AI provider.
+    header = [l for l in text.split(chr(10)) if l.strip()][:8]
+    names = [user.name, cv_rules.parse_contact(header, text)["name"]]
+    llm, provider = run_json_task(cv_prompt(strip_contact(text, names)), LLMCV, task="cv", text=text, skills=skills)
     cv = build_cv(llm, text, skills)
     old = db.get(CandidateProfile, user.id)
     old_file_id = old.cv_file_id if old else None

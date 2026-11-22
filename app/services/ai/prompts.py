@@ -5,18 +5,54 @@ import re
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 PHONE = re.compile(r"(?<!\w)\+?\d[\d\s().-]{7,17}\d(?!\w)")
 URL = re.compile(r"(?:https?://|www\.)\S+|\b(?:linkedin|github)\.com/\S*", re.I)
-CONTACT_LINE = re.compile(r"\b(email|e-mail|phone|mobile|cell|tel|whatsapp|contact no)\b\s*[:.\-]", re.I)
+CONTACT_LINE = re.compile(
+    r"\b(email|e-mail|phone|mobile|cell|tel|whatsapp|contact no|address|residence|home town|hometown|"
+    r"date of birth|dob|cnic|nic|passport|nationality|father'?s? name|marital status)\b\s*[:.\-]",
+    re.I,
+)
+CITY = re.compile(
+    r"\b(lahore|karachi|islamabad|rawalpindi|gujrat|faisalabad|multan|peshawar|quetta|sialkot|pakistan)\b", re.I
+)
+HEADER_LINES = 8  # the top of a CV is where the name, address and city sit
 
 
-def strip_contact(text: str) -> str:
-    """Removes email, phone numbers, profile links and 'Phone: ...' lines before text goes to an AI service."""
+def _name_parts(names) -> tuple[list[str], list[str]]:
+    full, tokens = [], []
+    for name in names:
+        name = re.sub(r"\s+", " ", name or "").strip()
+        if len(name) < 3:
+            continue
+        full.append(name)
+        tokens += [t for t in re.split(r"[\s,.]+", name) if len(t) >= 3]
+    return full, tokens
+
+
+def strip_contact(text: str, names: tuple[str, ...] | list[str] = ()) -> str:
+    """Removes what identifies the person before text goes to an AI service: email, phone numbers,
+    profile links, 'Phone: ...' / 'Address: ...' lines, the candidate's name (every full-name
+    mention, and the name parts in the header) and the city lines in the header."""
+    full, tokens = _name_parts(names)
+    full_re = re.compile("|".join(re.escape(n) for n in sorted(full, key=len, reverse=True)), re.I) if full else None
+    token_re = (
+        re.compile(r"\b(" + "|".join(re.escape(t) for t in dict.fromkeys(tokens)) + r")\b", re.I) if tokens else None
+    )
     out = []
+    seen = 0  # non-empty lines so far
     for line in text.split("\n"):
         if CONTACT_LINE.search(line):
+            continue
+        header = line.strip() != "" and seen < HEADER_LINES
+        if line.strip():
+            seen += 1
+        if header and len(line.strip()) < 60 and CITY.search(line):
             continue
         line = EMAIL.sub("", line)
         line = URL.sub("", line)
         line = PHONE.sub("", line)
+        if full_re:
+            line = full_re.sub("", line)
+        if header and token_re:
+            line = token_re.sub("", line)
         if line.strip() or not out or out[-1].strip():
             out.append(line.rstrip())
     return "\n".join(out)

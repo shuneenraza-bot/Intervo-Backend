@@ -8,6 +8,7 @@ import pytest
 
 from app.config import settings
 from app.models import SessionAnswer
+from app.services import transcribe
 from app.services.ai import speech
 from app.services.ai.speech import GroqWhisperProvider, NoSpeechProvider, SpeechProvider, SpeechUnavailable, Transcript
 from tests.conftest import employer_payload, signup_full
@@ -110,7 +111,8 @@ def test_transcribe_validates_type_and_size(client, auth, library, fake, name, c
     ("webm", "audio/webm;codecs=opus", b"\x1a\x45\xdf\xa3" + b"\0" * 20), ("ogg", "audio/ogg", b"OggS" + b"\0" * 20),
     ("mp3", "audio/mpeg", b"ID3" + b"\0" * 20), ("m4a", "audio/mp4", b"\0\0\0\x18ftypM4A " + b"\0" * 20),
 ])
-def test_other_audio_formats_are_accepted(client, auth, library, fake, ext, ctype, head):
+def test_other_audio_formats_are_accepted(client, auth, library, fake, monkeypatch, ext, ctype, head):
+    monkeypatch.setattr(transcribe, "audio_seconds", lambda e, d: 5.0)  # these bodies are only headers
     iv = start(client, auth)
     res = client.post(url(iv, "transcribe"), headers=auth, files=audio(head, f"a.{ext}", ctype))
     assert res.status_code == 200, res.text

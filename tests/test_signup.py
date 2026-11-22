@@ -35,7 +35,7 @@ def test_signup_is_not_complete_until_the_face_is_enrolled(client):
 
     body = finish_signin(client, pending)
     assert body["user"]["lastLogin"]["method"] == "signup"
-    assert body["user"]["face"]["template"]["v"] == 2
+    assert body["user"]["face"]["enrolled"] is True and "template" not in body["user"]["face"]
     assert isinstance(body["user"]["face"]["enrolledAt"], int)
     assert client.get("/api/auth/me", headers=bearer(body["token"])).json()["id"] == body["user"]["id"]
 

@@ -98,6 +98,12 @@ def face_template(offset: float = 0.0) -> dict:
     return {"v": 2, "method": "landmarks", "features": [round(0.3 + (i % 23) * 0.05 + offset, 4) for i in range(276)]}
 
 
+def blink_liveness(blink: bool = True) -> dict:
+    """The browser's blink evidence: eye-blink scores over ~1.2 s. With blink=False the eyes stay open."""
+    scores = [0.05, 0.06, 0.05, 0.4, 0.8, 0.7, 0.1, 0.05] if blink else [0.05] * 8
+    return {"samples": [{"t": i * 150, "v": v} for i, v in enumerate(scores)]}
+
+
 def candidate_payload(**overrides) -> dict:
     return {"role": "candidate", "name": "Ayesha Khan", "email": "ayesha@example.com",
             "password": PASSWORD, "dataConsent": True, **overrides}
@@ -118,7 +124,7 @@ def finish_signin(client, pending: dict, offset: float = 0.0) -> dict:
     headers = bearer(pending["pendingToken"])
     if pending["faceEnrolled"]:
         res = client.post("/api/auth/face/verify", headers=headers,
-                          json={"template": face_template(offset), "liveness": {"blink": True}})
+                          json={"template": face_template(offset), "liveness": blink_liveness()})
     else:
         res = client.post("/api/auth/face/enroll", headers=headers, json={"template": face_template(offset)})
     assert res.status_code == 200, res.text

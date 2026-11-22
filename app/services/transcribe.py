@@ -1,13 +1,12 @@
 """Validates an uploaded audio answer and turns it into text. The audio lives in memory only
 and is discarded afterwards; only the transcript is ever stored."""
 
-import io
 import logging
-import wave
 
 from fastapi import HTTPException, UploadFile, status
 
 from app.services.ai import speech
+from app.services.audio_length import audio_seconds
 from app.services.ai.speech import SpeechUnavailable, Transcript
 
 log = logging.getLogger("intervo.speech")
@@ -37,14 +36,6 @@ def _sniff(head: bytes) -> str | None:
     return None
 
 
-def _wav_seconds(data: bytes) -> float | None:
-    try:
-        with wave.open(io.BytesIO(data)) as w:
-            return w.getnframes() / float(w.getframerate() or 1)
-    except Exception:
-        return None
-
-
 def read_audio(upload: UploadFile) -> tuple[bytes, str, str]:
     """Returns (bytes, filename, content type) after checking size and type, or raises 4xx."""
     name = (upload.filename or "audio").rsplit("/", 1)[-1].rsplit("\\", 1)[-1][:100]
@@ -59,7 +50,11 @@ def read_audio(upload: UploadFile) -> tuple[bytes, str, str]:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="The audio file is empty.")
     if _sniff(data[:16]) != ext:
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="The file isn't valid audio for its type.")
-    if ext == "wav" and (secs := _wav_seconds(data)) is not None and secs > MAX_AUDIO_SECONDS:
+    # The length is read from the file itself, before anything is sent to a speech service.
+    secs = audio_seconds(ext, data)
+    if secs is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="We couldn't read the length of this recording. Record it again.")
+    if secs > MAX_AUDIO_SECONDS:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Audio is too long (about 3 minutes maximum).")
     return data, name, ctype or f"audio/{ext}"
 

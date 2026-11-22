@@ -9,11 +9,12 @@ from app.main import app
 from app.models import ScoringRules, User
 from app.services.security import ALGORITHM
 from tests.conftest import (
-    PASSWORD, bearer, candidate_payload, employer_payload, face_template, finish_signin, sign_in, signup_full,
+    PASSWORD, bearer, blink_liveness, candidate_payload, employer_payload, face_template, finish_signin, sign_in,
+    signup_full,
 )
 
 EMAIL = "ayesha@example.com"
-BLINK = {"blink": True}
+BLINK = blink_liveness()
 
 
 def password_step(client, **fields):
@@ -142,7 +143,7 @@ def test_wrong_face_is_rejected(client, candidate):
 
 def test_verify_needs_a_passed_blink(client, candidate):
     token = pending(client)
-    assert verify(client, token, liveness={"blink": False}).status_code == 400
+    assert verify(client, token, liveness=blink_liveness(False)).status_code == 400
     assert client.post("/api/auth/face/verify", headers=bearer(token), json={"template": face_template()}).status_code == 422
     assert verify(client, token).status_code == 200  # a refused blink check doesn't burn an attempt
 
@@ -220,7 +221,7 @@ def test_re_enrol_replaces_the_face_and_there_is_no_delete(client, candidate):
     headers = bearer(candidate["token"])
     res = client.put("/api/auth/face", json={"template": face_template(offset=0.3)}, headers=headers)
     assert res.status_code == 200
-    assert res.json()["face"]["template"]["v"] == 2
+    assert res.json()["face"]["enrolled"] is True and "template" not in res.json()["face"]
 
     # The old face stops working; the new one works.
     assert verify(client, pending(client)).status_code == 401

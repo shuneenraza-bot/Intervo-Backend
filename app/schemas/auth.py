@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import EmailStr, Field, field_validator
 
 from app.models import User
+from app.services.liveness import BlinkSample
 from app.schemas.base import CamelModel, to_ms
 
 Role = Literal["candidate", "employer", "admin"]
@@ -42,10 +43,10 @@ class SignupRequest(_EmailModel):
 
 
 class Liveness(CamelModel):
-    """What the browser's blink check saw. The server can't re-check a blink from a template,
-    so this records that the client ran it and refuses the request if it didn't pass."""
+    """The browser's blink evidence: the eye-blink score of each frame it checked. The server
+    re-checks the series (app/services/liveness.py); a bare "blinked: true" is not accepted."""
 
-    blink: bool
+    samples: list[BlinkSample] = Field(max_length=300)
 
 
 class FaceEnrolRequest(CamelModel):
@@ -66,7 +67,9 @@ class PendingResponse(CamelModel):
 
 
 class FaceOut(CamelModel):
-    template: dict | list
+    """Whether a face is enrolled. The template itself is never sent back to the browser."""
+
+    enrolled: bool = True
     enrolled_at: int | None
 
 
@@ -95,7 +98,7 @@ class UserOut(CamelModel):
             company=user.company,
             created_at=to_ms(user.created_at),
             face=(
-                FaceOut(template=user.face_template, enrolled_at=to_ms(user.face_enrolled_at))
+                FaceOut(enrolled=True, enrolled_at=to_ms(user.face_enrolled_at))
                 if user.face_template is not None
                 else None
             ),

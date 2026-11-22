@@ -1,6 +1,7 @@
 """Two-factor sign-in: password first, then face. Neither alone gives access."""
 
 import math
+import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
@@ -12,6 +13,7 @@ from app.db import new_id
 from app.models import CandidateProfile, ScoringRules, User
 from app.schemas.auth import FaceVerifyRequest, LandmarkTemplate, LoginRequest, SignupRequest
 from app.services.face import DEFAULT_FACE_THRESHOLD, compare_geometry, is_landmark_template
+from app.services.liveness import blink_ok
 from app.services.security import hash_password, verify_password
 
 MAX_PASSWORD_ATTEMPTS = 5
@@ -19,6 +21,15 @@ LOCKOUT_SECONDS = 60
 MAX_FACE_ATTEMPTS = 3
 FACE_LOCKOUT_SECONDS = 300
 MIN_PASSWORD_LENGTH = 8
+
+
+def check_password_rules(password: str) -> str | None:
+    """The sign-up password rule: 8+ characters with an upper-case letter, a lower-case letter and a digit."""
+    if len(password) < MIN_PASSWORD_LENGTH:
+        return f"Use a password with at least {MIN_PASSWORD_LENGTH} characters."
+    if not (re.search(r"[a-z]", password) and re.search(r"[A-Z]", password) and re.search(r"[0-9]", password)):
+        return "Use upper and lower case letters and a number in your password."
+    return None
 
 
 def _now() -> datetime:
@@ -71,8 +82,9 @@ def signup(db: Session, body: SignupRequest) -> User:
     company = (body.company or "").strip()
     if len(name) < 3:
         raise HTTPException(422, detail="Enter your full name.")
-    if len(body.password) < MIN_PASSWORD_LENGTH:
-        raise HTTPException(422, detail=f"Use a password with at least {MIN_PASSWORD_LENGTH} characters.")
+    password_problem = check_password_rules(body.password)
+    if password_problem:
+        raise HTTPException(422, detail=password_problem)
     if body.role == "employer" and len(company) < 2:
         raise HTTPException(422, detail="Enter your company name.")
     if body.role == "candidate" and not body.data_consent:
@@ -159,7 +171,7 @@ def verify_face(db: Session, pending_user: User, body: FaceVerifyRequest) -> Use
     if not is_landmark_template(user.face_template):
         db.rollback()
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No face is enrolled for this account. Enrol your face first.")
-    if not body.liveness.blink:
+    if not blink_ok(body.liveness.samples):
         db.rollback()
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Blink check failed. Blink naturally and try again.")
 

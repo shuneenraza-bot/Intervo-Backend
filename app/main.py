@@ -1,8 +1,13 @@
 from fastapi import APIRouter, FastAPI
+from starlette.formparsers import MultiPartParser
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import admin, applications, auth, candidate, cv, health, interviews, jobs, notifications
+
+# Uploads (CV 5 MB, audio 10 MB) are held in memory. By default Starlette moves any upload over
+# 1 MB to a temporary file on disk, which would put recordings on disk for the length of a request.
+MultiPartParser.spool_max_size = 12 * 1024 * 1024
 
 app = FastAPI(title="Intervo API", version="0.1.0")
 

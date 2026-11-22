@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, false, func
+from sqlalchemy import (
+    Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, false, func, text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, JSONType, TimestampMixin
@@ -117,3 +119,12 @@ class ApplicationStatusEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     application: Mapped[Application] = relationship(back_populates="history")
+
+
+# One response per shortlist, enforced by the database: at most one accepted / declined row per application.
+Index(
+    "uq_application_one_response",
+    ApplicationStatusEvent.application_id,
+    unique=True,
+    postgresql_where=text("status IN ('accepted', 'declined_by_candidate')"),
+)

@@ -4,6 +4,7 @@ only after the candidate accepts."""
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import new_id
@@ -48,8 +49,11 @@ def record(db: Session, application: Application, new_status: str, *, employer_m
     db.flush()  # gives the new history row its created_at
 
 
-def _load(db: Session, application_id: str) -> Application:
-    application = db.scalars(select(Application).where(Application.id == application_id).options(*_LOAD)).first()
+def _load(db: Session, application_id: str, lock: bool = False) -> Application:
+    query = select(Application).where(Application.id == application_id).options(*_LOAD)
+    if lock:
+        query = query.with_for_update(of=Application)  # the row stays locked until commit/rollback
+    application = db.scalars(query).first()
     if application is None:
         raise _error(status.HTTP_404_NOT_FOUND, "This application could not be found.")
     return application
@@ -113,7 +117,7 @@ def my_applications(db: Session, candidate: User) -> list[MyApplication]:
 
 
 def respond(db: Session, application_id: str, candidate: User, decision: str, note: str | None) -> MyApplication:
-    application = _load(db, application_id)
+    application = _load(db, application_id, lock=True)  # a second answer waits here, then sees the first
     if application.candidate_id != candidate.id:
         raise _error(status.HTTP_403_FORBIDDEN, "You can only respond to your own applications.")
     if application.status != "shortlisted":
@@ -125,18 +129,21 @@ def respond(db: Session, application_id: str, candidate: User, decision: str, no
     note = (note or "").strip() or None
     job = application.job
     accepted = decision == "accept"
-    record(db, application, "accepted" if accepted else "declined_by_candidate", candidate_note=note)
-
-    if job.employer_id:
-        said = f' They said: "{note}"' if note else ""
-        link = f"/candidates?job={job.id}"
-        if accepted:
-            notify(db, job.employer_id, "accepted", f"{candidate.name} accepted your shortlist for {job.title}",
-                   f"Their contact details are now on the Candidates page.{said}", link)
-        else:
-            notify(db, job.employer_id, "declined", f"{candidate.name} declined your shortlist for {job.title}",
-                   f"No contact details were shared.{said}", link)
-    db.commit()
+    try:
+        record(db, application, "accepted" if accepted else "declined_by_candidate", candidate_note=note)
+        if job.employer_id:
+            said = f' They said: "{note}"' if note else ""
+            link = f"/candidates?job={job.id}"
+            if accepted:
+                notify(db, job.employer_id, "accepted", f"{candidate.name} accepted your shortlist for {job.title}",
+                       f"Their contact details are now on the Candidates page.{said}", link)
+            else:
+                notify(db, job.employer_id, "declined", f"A candidate declined your shortlist for {job.title}",
+                       f"No contact details were shared.{said}", link)
+        db.commit()
+    except IntegrityError:  # the database allows only one answer per application, even if the lock were bypassed
+        db.rollback()
+        raise _error(status.HTTP_409_CONFLICT, "You've already responded to this application.") from None
     return _my_application(application)
 
 

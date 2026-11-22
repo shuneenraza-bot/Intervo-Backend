@@ -6,7 +6,23 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from sqlalchemy.types import TypeDecorator
+
 from app.db import Base, JSONType, TimestampMixin
+from app.services.face_crypto import decrypt_template, encrypt_template
+
+
+class EncryptedFace(TypeDecorator):
+    """A face template as JSON in the database, encrypted at rest. Code sees the plain template."""
+
+    impl = JSONType
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return encrypt_template(value)
+
+    def process_result_value(self, value, dialect):
+        return decrypt_template(value)
 
 if TYPE_CHECKING:
     from app.models.catalog import JobRole
@@ -31,7 +47,7 @@ class User(TimestampMixin, Base):
     company: Mapped[str | None] = mapped_column(String(160))
 
     # Face ID: landmark template {"v": 2, "method": "landmarks", "features": [...]}
-    face_template: Mapped[Any | None] = mapped_column(JSONType)
+    face_template: Mapped[Any | None] = mapped_column(EncryptedFace)
     face_enrolled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

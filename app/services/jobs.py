@@ -255,5 +255,9 @@ def ranked_candidates(db: Session, job_id: str, employer: User) -> dict:
             entry["contact"] = _contact(user, snap)
         candidates.append(entry)
     candidates.sort(key=lambda c: c["match"]["percentage"], reverse=True)  # stable: ties keep application order
+    # The name stays hidden until the candidate accepts: before that, "Candidate #n" in ranking order.
+    for rank, c in enumerate(candidates, start=1):
+        if "contact" not in c:
+            c["candidate"]["name"] = f"Candidate #{rank}"
 
     return {"job": job_dict, "hidden": len(applications) - len(visible), "candidates": candidates}

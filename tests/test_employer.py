@@ -276,7 +276,7 @@ def test_employer_sees_only_the_cv_match(client, employer, ayesha):
     entry = body["candidates"][0]
     # Exactly these keys: no sessions, profile, fit/factors, evidence or any interview score.
     assert set(entry) == {"application", "candidate", "cvSummary", "match"}
-    assert entry["candidate"] == {"id": ayesha[0]["id"], "name": "Ayesha Khan"}  # no email or phone before they accept
+    assert entry["candidate"] == {"id": ayesha[0]["id"], "name": "Candidate #1"}  # no name, email or phone before they accept
     assert entry["application"]["consent"] is True
 
     match = entry["match"]
@@ -327,7 +327,9 @@ def test_candidates_are_ranked_by_cv_match(client, db, employer, ayesha):
         assert client.post(f"/api/jobs/{job['id']}/apply", json={"consent": True}, headers=headers).status_code == 201
 
     body = client.get(f"/api/jobs/{job['id']}/candidates", headers=employer[1]).json()
-    assert [c["candidate"]["name"] for c in body["candidates"]] == ["Ayesha Khan", "Bilal Ahmed"]
+    # names stay hidden until a candidate accepts: placeholders in ranking order
+    assert [c["candidate"]["name"] for c in body["candidates"]] == ["Candidate #1", "Candidate #2"]
+    assert "Ayesha" not in str(body) and "Bilal" not in str(body)
     assert [c["match"]["percentage"] for c in body["candidates"]] == [90, 35]
     weaker = body["candidates"][1]["match"]
     assert [(p["name"], p["via"]) for p in weaker["partial"]] == [("JavaScript", "TypeScript")]

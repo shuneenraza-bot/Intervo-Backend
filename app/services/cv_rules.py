@@ -278,9 +278,47 @@ def parse_cv(text: str, skills: list[dict]) -> dict:
     }
 
 
+def _month_span(date_range: str) -> tuple[int, int] | None:
+    """(first month, month after the last) as year*12+month, or None if the text is no date range."""
+    m = DATE_RANGE.search(date_range or "")
+    if not m:
+        return None
+
+    def index(s: str) -> int:
+        if re.search(r"present|current|now|ongoing|date", s, re.I):
+            now = datetime.now()
+            return now.year * 12 + now.month - 1
+        year = int(re.search(r"(?:19|20)\d{2}", s).group(0))
+        mm = re.search(MONTH, s, re.I)
+        return year * 12 + (_MONTHS.index(mm.group(0)[:3].lower()) if mm else 0)
+
+    start, end = index(m.group(1)), index(m.group(2))
+    return (start, end) if end > start else None
+
+
+def merged_months(experience: list[dict]) -> int:
+    """Months of work experience with overlapping jobs merged, so a calendar month counts once.
+    A job without a readable date range adds its own `months` (it cannot be merged)."""
+    spans, loose = [], 0
+    for e in experience:
+        span = _month_span(e.get("dates") or "")
+        if span:
+            spans.append(span)
+        else:
+            loose += int(e.get("months") or 0)
+    total, edge = 0, None
+    for start, end in sorted(spans):
+        if edge is None or start > edge:
+            total += end - start
+            edge = end
+        elif end > edge:
+            total += end - edge
+            edge = end
+    return total + loose
+
+
 def years_from_months(experience: list[dict]) -> float:
-    total = sum(int(e.get("months") or 0) for e in experience)
-    return _js_round(total / 12 * 2) / 2
+    return _js_round(merged_months(experience) / 12 * 2) / 2
 
 
 # ---------- job description ----------

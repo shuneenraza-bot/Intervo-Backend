@@ -1,6 +1,6 @@
 # Rules audit
 
-Audit date: 2026-11-22. Read-only check of this backend and `C:\Users\UsEr\Intervo-Frontend` (FE). No `.env` values were read.
+Audit date: 2026-11-22; updated the same day after the fixes listed at the end. Read-only check of this backend and `C:\Users\UsEr\Intervo-Frontend` (FE). No `.env` values were read.
 
 Status: **IMPLEMENTED**, **PARTLY**, **NOT IMPLEMENTED**. Paths are backend paths unless marked FE.
 
@@ -19,11 +19,11 @@ Two things apply to many rows:
 | CGPA / marks | IMPLEMENTED (fallback parser only) | `CGPA/GPA x[/y]` first, else `NN%`. Lines starting with gpa, percentage, grade, marks stay with the entry above | `cv_rules.py:33`, `:176-183` |
 | Contact patterns | IMPLEMENTED | Email regex; Pakistani mobile `(+92\|0)3dd d{7}`, else any 10-17 digit number; `linkedin.com/in/…`, `github.com/…`; name = first 2-5 word line without `@ digits http`; location from 10 Pakistani city names | `cv_rules.py:37-39`, `parse_contact` `:210`; called always at `app/services/cv.py:83` |
 | Skill alias matching | IMPLEMENTED, always runs | Whole-word, case-insensitive match of the skill name or any alias from the skill library. Also used as a safety net on top of Gemini | `cv_rules.py:46-54`; `cv.py:60`, `:76` |
-| Experience years in Python | IMPLEMENTED | Months per job from the date text (days/30.4, rounded); sum / 12, rounded to the nearest 0.5. Gemini's own numbers are ignored. Overlapping jobs are counted twice | `cv_rules.py:137`, `:281`; `cv.py:69-70`, `:91` |
+| Experience years in Python | IMPLEMENTED | Months per job from the date text (kept per job for display). The total merges overlapping date ranges, so a calendar month counts once; the merged months / 12 are rounded to the nearest 0.5. A job without a readable date range adds its own months. Gemini's own numbers are ignored. Test: two overlapping jobs | `app/services/cv_rules.py:137` (`months_between`), `merged_months` and `years_from_months`; `app/services/cv.py:69-70`, `:91`; `tests/test_hardening_media.py` |
 | 5 MB limit | IMPLEMENTED | 5 × 1024 × 1024 bytes. Reads at most limit+1 bytes. 413 if over | `app/services/cv_text.py:9`, `:100`; `app/routers/cv.py:41`. FE: `src/cvParser.js:14` |
 | PDF / DOCX / TXT only | IMPLEMENTED | Extension plus content check (`%PDF-`, `PK`, no NUL bytes). `.doc` has its own error; anything else is 415. Also: PDF max 10 pages, text max 60,000 chars, DOCX max 50 MB unzipped | `cv_text.py:97-121`, `:10-13`. FE: `cvParser.js:15` |
 | Scanned PDF rejected | IMPLEMENTED | Fewer than 60 letters/digits after extraction gives 422 with a "scanned image" message. Password-protected PDFs are also rejected | `cv_text.py:12`, `:123-130`. FE: `cvParser.js:40` |
-| Contact lines removed before Gemini | PARTLY | Removed: lines like `Email:`, `Phone:`, `Mobile:`, `Tel:`, `WhatsApp:`; every email, phone number, http/www URL, linkedin/github link. **Not removed:** the candidate's name, address, city. See section 11 | `app/services/ai/prompts.py:5-8`, `:11`; used at `cv.py:139` |
+| Contact details and name removed before Gemini | IMPLEMENTED | Removed: lines labelled Email, Phone, Mobile, Tel, WhatsApp, Address, Residence, Date of Birth, CNIC, Passport, Nationality, Father's name, Marital status; every email, phone number and http/www/linkedin/github link; every mention of the candidate's name (account name and the name found in the CV header); the name parts and any city/Pakistan line in the first 8 lines | `app/services/ai/prompts.py` (`CONTACT_LINE`, `CITY`, `strip_contact`); called with the names at `app/services/cv.py:138-141`; `tests/test_hardening_media.py` |
 
 ## 2. JD parsing
 
@@ -31,7 +31,7 @@ Two things apply to many rows:
 |---|---|---|---|
 | Weight 3 | IMPLEMENTED, wider than the rule | Sentence containing the skill matches `must`, `required`, `requirement`, `strong`, `essential`, `proficien…`, `expert`, `solid` | `cv_rules.py:296`; Gemini prompt `prompts.py:64` |
 | Weight 1 | IMPLEMENTED, wider than the rule | `nice to have`, `preferred`, `plus`, `bonus`, `familiar`, `desirable`, `good to have`. Weight 3 wins if both appear | `cv_rules.py:298` |
-| Otherwise 2 | PARTLY | Default is the role's own skill weight if the skill is in the role, else 2. With Gemini, a weight of 2 is also replaced by the role default | `cv_rules.py:295`; `cv.py:194-197` |
+| Otherwise: role default, else 2 | IMPLEMENTED (differs from "otherwise 2", by design) | A skill with no must/nice-to-have wording keeps the weight the role gives that skill; only a skill the role does not list gets 2. With Gemini, a weight of 2 is replaced by the role default in the same way. Documented as the real behaviour; no code change | `cv_rules.py:295`; `app/services/cv.py:194-197` |
 | Years detection | IMPLEMENTED | First `N years/yrs`, also `N+` and `N-M`. Takes the first number. Clamped 0-60 | `cv_rules.py:301`, `:307`; `cv.py:204` |
 | Degree detection | IMPLEMENTED | bachelor's, master's, BS, MS, BSc, MSc, MBA, BBA, PhD, plus up to 60 chars after | `cv_rules.py:302`; checked in `requirement_checks` `:315` |
 | Fresher-friendly flag | extra | `fresh`, `graduate`, `intern`, `entry level`, `0-1 years` waive the years check | `cv_rules.py:309`, `:323` |
@@ -84,12 +84,12 @@ Two things apply to many rows:
 
 | Rule | Status | Actual value | Where |
 |---|---|---|---|
-| CV match only, no interview data | IMPLEMENTED | Employer routes return match, checks, CV summary (top degree, years, project count) and name. Nothing from interview tables. Interview endpoints are candidate-only. FE text says the same | `app/services/jobs.py:220-259`; `app/services/matching.py:83-101`; `app/routers/interviews.py:15`; FE `src/EmployerApp.jsx:536` |
+| CV match only, no interview data | IMPLEMENTED | Employer routes return match, checks, CV summary (top degree, years, project count) and a "Candidate #n" label (the name only after acceptance). Nothing from interview tables. Interview endpoints are candidate-only. FE text says the same | `app/services/jobs.py:220-259`; `app/services/matching.py:83-101`; `app/routers/interviews.py:15`; FE `src/EmployerApp.jsx:536` |
 | Consent filter | IMPLEMENTED | Listed only if the application has `consent` **and** the candidate's profile has `share_with_employers`. Others are only counted in `hidden`. Same check for the CV and CV file endpoints | `jobs.py:235-238`; `app/services/applications.py:156` |
 | Ranking | IMPLEMENTED | Sorted by CV match percentage, highest first; ties keep application order | `jobs.py:257` |
 | Contact only after acceptance | IMPLEMENTED | Email and phone appear only when status is `accepted` | `jobs.py:254-255`; `applications.py:175-176` |
 | Original CV only after acceptance | IMPLEMENTED | `cv-file` returns 403 unless status is `accepted`. Served with `Cache-Control: no-store` | `applications.py:184-187`; `app/routers/applications.py:559-566` |
-| Candidate name before acceptance | different | The employer sees the candidate's **name** (not email or phone) in the ranked list before acceptance | `jobs.py:249` |
+| Candidate name before acceptance | IMPLEMENTED | Hidden. Until the candidate accepts, the employer sees "Candidate #1", "Candidate #2", … in ranking order. The real name appears only after acceptance, together with email and phone. A decline notification does not name the candidate either | `app/services/jobs.py:257-261`; `app/services/applications.py:136-141`; FE `src/api.js` (`getCandidatesSync`); `tests/test_hardening.py` |
 
 ## 9. Applications
 
@@ -98,7 +98,7 @@ Two things apply to many rows:
 | CV required | IMPLEMENTED | 400 "Upload your CV before applying" | `jobs.py:154-156` |
 | CV snapshot per application | IMPLEMENTED | Parsed CV, summary, skills and file name are deep-copied at apply time; the original file row is kept for it. Later edits or uploads do not change it | `jobs.py:157-165`; `app/services/cv_files.py:300-309` |
 | One application per job | IMPLEMENTED | Check in code plus DB unique constraint on (job, candidate); race gives 409 | `jobs.py:150-152`, `:174-176`; `app/models/job.py:74` |
-| One response per shortlist | IMPLEMENTED (code only) | Candidate can respond only while status is `shortlisted`; after accept/decline, 409. No DB constraint or row lock, so two simultaneous requests are not strictly guarded | `applications.py:119-125` |
+| One response per shortlist | IMPLEMENTED | Three layers: the candidate may respond only while the status is `shortlisted`; the application row is locked (`SELECT … FOR UPDATE`) while responding, so a second request waits and then gets 409; and a partial unique index allows at most one `accepted` / `declined_by_candidate` row per application. Migration `a7d1e3f95b21`. Tests: two simultaneous responses (one 200, one 409) and a direct duplicate insert refused by the index | `app/services/applications.py` (`respond`, `_load`); `app/models/job.py` (`uq_application_one_response`); `alembic/versions/20261122_a7d1e3f95b21_hardening.py`; `tests/test_hardening.py` |
 
 ## 10. Authentication
 
@@ -106,12 +106,12 @@ Two things apply to many rows:
 |---|---|---|---|
 | Password and face both required | IMPLEMENTED | Login returns only a face-pending token. All normal endpoints need a full token and an enrolled face | `app/routers/auth.py:324-327`; `app/deps.py:50-60`; `app/services/security.py:27-39` |
 | Face-pending token lifetime | IMPLEMENTED | 5 minutes | `security.py:29` |
-| Password rules | PARTLY | Server: minimum 8 characters, max 128, nothing else. FE sign-up form also needs upper+lower case and a digit (strength score ≥ 3), but the server does not check that | `app/services/auth.py:21`, `:74`; `app/schemas/auth.py:40`; FE `src/Auth.jsx:281`, `src/lib.js:45` |
+| Password rules | IMPLEMENTED | Server: 8-128 characters with an upper-case letter, a lower-case letter and a digit (422 otherwise). The sign-up form checks the same rule before sending | `app/services/auth.py:21`, `check_password_rules`; `app/schemas/auth.py:40`; FE `src/lib.js` (`passwordMeetsRules`), `src/Auth.jsx:281` |
 | Password lockout | IMPLEMENTED | 5 wrong passwords → locked 60 s (429 with `Retry-After`) | `auth.py:17-18`, `:114-122` |
 | Face lockout | IMPLEMENTED | 3 wrong faces → locked 300 s; a fresh password step resets the face counter | `auth.py:19-20`, `:153`, `:167-174` |
-| Blink liveness | PARTLY | **Browser only.** MediaPipe blendshapes (open < 0.35, closed > 0.55, 4 s window). The server only checks a client-sent `blink: true` flag, so a custom client can skip the check | FE `src/Camera.jsx:63-65`, `:107-132`; FE `src/api.js:284`; `app/schemas/auth.py:44-48`; `auth.py:162` |
+| Blink liveness | IMPLEMENTED (evidence checked on the server; capture is in the browser) | The browser (MediaPipe, open < 0.35, closed > 0.55, 4 s window) sends the blink score of every frame it checked. The server requires 5-300 frames, strictly increasing times spanning 0.15-6 s, and open eyes followed by closed eyes; a bare `blink: true` is rejected (422). Limit: the frames are still reported by the client, so a modified client could forge a series; only server-side video analysis would prevent that | FE `src/Camera.jsx:63-65`, `landmarkLiveness`; FE `src/api.js` (`completeFace`); `app/services/liveness.py`; `app/schemas/auth.py:44-48`; `app/services/auth.py` (`verify_face`) |
 | Face threshold | IMPLEMENTED | Default 0.55 similarity; admin can change it (`faceThreshold`). `similarity = max(0, 1 − mean abs difference / 0.12)` | `app/services/face.py:5-6`, `:19-23`; `auth.py:62-65`, `:166-167`; FE `src/data.js:93` |
-| Face templates encrypted | **NOT IMPLEMENTED** | Stored as plain JSON (276 landmark distances). Also returned to the signed-in user by `/auth/me` | `app/models/user.py:34`; `app/schemas/auth.py:68-71`, `:97-101` |
+| Face templates encrypted | IMPLEMENTED | Encrypted at rest with Fernet (AES-128-CBC + HMAC-SHA256). Key: `FACE_ENCRYPTION_KEY`, or derived from `JWT_SECRET` if unset (set a separate key in production; losing it makes stored faces unreadable). The template is no longer sent to the browser: `/auth/me` returns only `face: { enrolled, enrolledAt }`. Existing rows were encrypted by migration `a7d1e3f95b21`; a plain legacy row is still readable | `app/services/face_crypto.py`; `app/models/user.py` (`EncryptedFace`); `app/schemas/auth.py:68-71`; `alembic/versions/20261122_a7d1e3f95b21_hardening.py`; FE `src/lib.js` (`hasFace`) |
 | Admin face reset | IMPLEMENTED | Admin-only endpoint clears the template and counters; open sessions stop working and the user must enrol again at next sign-in | `app/routers/admin.py:152-155`; `app/services/admin.py:426-433`; `app/deps.py:56-58` |
 | Admin cannot sign up | IMPLEMENTED | Sign-up accepts only `candidate` or `employer`; FE hides the admin tab on sign-up. Admins are created by the seed script | `app/schemas/auth.py:9`, `:37`; FE `src/Auth.jsx:23` |
 
@@ -119,25 +119,24 @@ Two things apply to many rows:
 
 | Rule | Status | Actual value | Where |
 |---|---|---|---|
-| Argon2 | IMPLEMENTED (backend) | Argon2 through pwdlib. **FE local mode** uses salted SHA-256 in the browser, not Argon2 | `app/services/security.py:7`, `:13`; FE `src/lib.js:39-43` |
+| Argon2 | IMPLEMENTED (backend) | Argon2 through pwdlib. **Known limitation: FE local mode** (no backend) hashes passwords with salted SHA-256 in the browser, not Argon2. It is a demo mode for running without a server and is not meant for real accounts | `app/services/security.py:7`, `:13`; FE `src/lib.js:39-43` |
 | No face images stored | IMPLEMENTED | Only 276 landmark distances are sent and stored; the server schema accepts only `v: 2` templates, max 2048 numbers. FE live-video frames are used only for brightness/motion and are not saved | `app/schemas/auth.py:14-17`; FE `src/faceCues.js:84-113`; FE `src/Camera.jsx:48` |
-| Audio deleted after transcription | IMPLEMENTED, one caveat | Audio is kept in memory, passed to Groq, and discarded; only the transcript is stored. Caveat: the web framework may spool uploads over ~1 MB to a temp file until the request closes (closed in `finally`) | `app/services/transcribe.py:75`; `app/routers/interviews.py:41`, `:77`; `app/services/ai/speech.py:1-2` |
-| No name/email sent to Gemini | PARTLY | Interview prompts send only role, skill, question and the answer text. CV prompt has email, phone and links removed, but the **name and address in the CV text are still sent** | `app/services/ai/prompts.py:11-26`, `:207-244`; `app/services/cv.py:139` |
+| Audio deleted after transcription | IMPLEMENTED | Audio is kept in memory, passed to Groq, and discarded; only the transcript is stored. Uploads up to 12 MB stay in memory (Starlette's default of spooling to a temp file above 1 MB is raised), so no recording touches the disk | `app/services/transcribe.py`; `app/routers/interviews.py:41`, `:77`; `app/main.py` (`MultiPartParser.spool_max_size`); `tests/test_hardening_media.py` |
+| No name/email sent to Gemini | IMPLEMENTED | Interview prompts send only role, skill, question and the answer text. The CV prompt has email, phone, links, address lines, the candidate's name and header city removed (see section 1). An answer in which the candidate says their own name is not filtered | `app/services/ai/prompts.py`; `app/services/cv.py:138-141` |
 | Voice size limit | IMPLEMENTED | 10 MB; types webm, ogg, wav, mp3, m4a, checked by file header | `transcribe.py:15`, `:17`, `:55-61` |
-| Voice duration limit | PARTLY | 190 s. Checked up front only for WAV files; for other formats it is checked after transcription (audio has already been sent to Groq). FE has no recording cap, only a timer | `transcribe.py:16`, `:62-63`, `:76-77`; FE `src/InterviewPage.jsx:584-650` |
+| Voice duration limit | IMPLEMENTED | 190 s. The length is read from the file before anything is sent: WAV (stdlib), WebM (Matroska timestamps), MP3 / OGG / M4A (mutagen). A longer file, or one whose length cannot be read, is refused with 422 and never reaches Groq. The provider's reported duration is still checked afterwards. FE stops recording at 3 minutes | `app/services/audio_length.py`; `app/services/transcribe.py:62-70`; FE `src/InterviewPage.jsx` (`MAX_RECORD_MS`); `tests/test_hardening_media.py` |
 | English only | IMPLEMENTED | Whisper called with `language="en"`; response language fixed to `en` | `app/services/ai/speech.py:56`, `:64` |
 
-## Not implemented, partly implemented, or different
+## Open points and known differences
 
-1. **Face templates are not encrypted** in the database, and `/auth/me` returns the template to the user (`app/models/user.py:34`, `app/schemas/auth.py:97`).
-2. **Blink liveness is browser-only.** The server trusts a `blink: true` flag (`app/services/auth.py:162`).
-3. **Password rules on the server are only "8+ characters".** The upper/lower/digit rule exists only in the frontend form (`app/services/auth.py:74`).
-4. **Candidate name still goes to Gemini** inside the CV text. Only email, phone and links are removed (`app/services/ai/prompts.py:11`).
-5. **Voice duration** is checked before sending only for WAV; other formats are checked after transcription. The frontend has no cap.
-6. **Audio can touch a temp file** if the framework spools a large upload; the app code itself never writes it.
-7. **JD weight "otherwise 2"** is really "role's skill weight, else 2". The keyword lists are longer than the rule (`strong`, `essential`, `proficient`, `familiar`, …).
-8. **CV heading/date/degree/CGPA regex rules** apply only when Gemini is off or fails. With Gemini these fields come from the model.
-9. **Experience years** count overlapping jobs twice.
-10. **Employer sees the candidate's name** before acceptance (email, phone and original CV stay hidden).
-11. **"One response per shortlist"** is enforced in code only, with no DB constraint or lock.
-12. **Frontend local mode** (no backend) hashes passwords with SHA-256, keeps the lockout counters in localStorage, and holds its own copies of the CV and scoring rules. These can drift from the backend.
+Fixed after the first audit (same day): encrypted face templates, server-checked blink evidence, server password rule, name and address kept from Gemini, audio length checked before upload and uploads kept in memory, merged overlapping experience, database guard for one response per shortlist, and hidden candidate names ("Candidate #n") until acceptance.
+
+What still differs from a strict reading of the rules:
+
+1. **Blink evidence is reported by the browser.** The server checks that it looks like a real blink, but cannot prove the frames came from a camera.
+2. **Face encryption key.** If `FACE_ENCRYPTION_KEY` is not set, the key comes from `JWT_SECRET`; rotating that secret would make stored faces unreadable until users re-enrol.
+3. **JD weight "otherwise 2"** is really "the role's skill weight, else 2". The keyword lists are longer than the rule (`strong`, `essential`, `proficient`, `familiar`, …).
+4. **CV heading/date/degree/CGPA regex rules** apply only when Gemini is off or fails (rule-based fallback). With Gemini these fields come from the model; skill matching, contact patterns and experience months always run in Python.
+5. **Frontend local mode** (no backend) hashes passwords with salted SHA-256 (not Argon2), keeps lockout counters in localStorage and holds its own copies of the CV and scoring rules. It is a known limitation of the demo mode and can drift from the backend.
+6. **A name typed inside an interview answer** is sent to Gemini with the rest of the answer; only the CV text is filtered.
+7. **Overlap merging needs readable dates.** A job whose dates cannot be parsed adds its own months and cannot be merged.

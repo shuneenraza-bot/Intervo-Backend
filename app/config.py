@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     database_url: str
     jwt_secret: str
     jwt_expire_minutes: int = 1440
+    # Fernet key that encrypts face templates in the database. If empty, a key is derived from JWT_SECRET.
+    face_encryption_key: str | None = None
     cors_origins: str = "http://localhost:5173,http://localhost:5174"
     test_database_url: str | None = None
 
