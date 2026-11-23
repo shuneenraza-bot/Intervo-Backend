@@ -158,7 +158,7 @@ def test_config_requires_sign_in_and_has_frontend_shape(client, employer):
     assert config["domains"] == [{"id": "tech", "name": "Technology"}]
     assert {"name": "React", "aliases": ["react"], "related": ["JavaScript"], "tip": ""} in config["skills"]
     assert config["roles"] == [{"id": "frontend", "title": "Frontend Developer", "domainId": "tech",
-                                "skills": [{"name": "React", "weight": 3}, {"name": "CSS", "weight": 2}]}]
+                                "skills": [{"name": "React", "weight": 3}, {"name": "CSS", "weight": 2}], "responsibilities": []}]
     assert config["criteria"] == [{"key": "relevance", "label": "Relevance", "weight": 2, "appliesTo": "all", "enabled": True}]
     assert "suitability" not in config["rules"]
 

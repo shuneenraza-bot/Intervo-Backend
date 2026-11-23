@@ -37,6 +37,9 @@ class JobRole(TimestampMixin, Base):
         String(40), ForeignKey("domains.id", ondelete="RESTRICT"), index=True
     )
     title: Mapped[str] = mapped_column(String(160))
+    responsibilities: Mapped[list[str]] = mapped_column(JSONType, default=list)  # short lines
+    # Inactive roles are hidden from candidates and new jobs; existing jobs and sessions keep them.
+    active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
 
     domain: Mapped[Domain] = relationship(back_populates="roles")
     skills: Mapped[list[RoleSkill]] = relationship(

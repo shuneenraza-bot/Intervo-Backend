@@ -150,6 +150,7 @@ The 46 tests run against a separate database, `intervo_test`, which is created a
 | Command | What it does |
 |---|---|
 | `python -m scripts.seed` | Loads configuration and demo data. Safe to run again; existing rows are left alone. |
+| `python -m scripts.seed_config` | Loads the 4 domains, 15 job roles (skills, weights, responsibilities), all skills (CV aliases, related skills, tips) and the question templates. Upserts by name; never deletes users, jobs, applications or sessions; unused old roles become inactive. Safe to run again. |
 | `python -m scripts.cleanup_test_data --dry-run` | Lists users with an invalid email and job titles with stray quotes, without changing anything. |
 | `python -m scripts.cleanup_test_data` | Fixes the job titles, then asks before deleting the listed users and their data. |
 | `python -m scripts.generate_erd` | Regenerates `docs/ERD.md` from the models. |
@@ -334,7 +335,8 @@ app/
 alembic/         Migrations
 docs/ERD.md      Entity relationship diagram, generated from the models
 scripts/
-  seed.py               Configuration and demo data, mirrors the frontend's src/data.js
+  seed_config.py        Domains, roles, skills and question templates (the frontend's src/data.js is generated from it)
+  seed.py               Runs seed_config, then loads the demo users, jobs and sessions
   cleanup_test_data.py  Removes leftover test data
   generate_erd.py       Writes docs/ERD.md
 tests/           pytest suite, runs against the intervo_test database

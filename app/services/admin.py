@@ -196,6 +196,7 @@ def _role_out(role: JobRole) -> RoleOut:
     return RoleOut(
         id=role.id, title=role.title, domain_id=role.domain_id,
         skills=[WeightedSkill(**s) for s in weighted_skills(role.skills)],
+        responsibilities=role.responsibilities or [], active=role.active,
     )
 
 
@@ -226,6 +227,11 @@ def _apply_role(db: Session, role: JobRole, body: RoleIn) -> None:
     if unknown:
         raise _error(422, f"These skills aren't in the skill library: {', '.join(unknown)}.")
     role.title, role.domain_id = body.title, body.domain_id
+    role.responsibilities = body.responsibilities
+    if body.active is not None:
+        role.active = body.active
+    elif role.active is None:
+        role.active = True
     wanted = {skill_ids[s.name]: s.weight for s in body.skills}
     for link in list(role.skills):
         if link.skill_id in wanted:

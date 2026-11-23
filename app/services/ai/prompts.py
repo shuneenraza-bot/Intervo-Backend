@@ -147,12 +147,17 @@ Points a good answer usually covers: {", ".join(keywords) or "none listed"}
 </answer>"""
 
 
-def question_prompt(role: str, skill: str, qtype: str) -> str:
+def question_prompt(role: str, skill: str, qtype: str, responsibilities: list[str] | None = None) -> str:
     kind = "a behavioural question (the candidate should answer with a real past situation)" if qtype == "behavioral" else "a technical question (answerable in 1 to 2 minutes)"
-    return f"""Write ONE interview question for a {role} candidate about the skill "{skill}": {kind}. Reply with ONE JSON object and nothing else, in exactly this shape:
+    duties = ""
+    if responsibilities:
+        lines = chr(10).join(f"- {line}" for line in responsibilities[:12])
+        duties = (f"{chr(10)}What people in this role do day to day (context only; use it to make the question "
+                  f"realistic):{chr(10)}{lines}{chr(10)}")
+    return f"""Write ONE interview question for a {role} candidate about the skill "{skill}": {kind}.{duties} Reply with ONE JSON object and nothing else, in exactly this shape:
 {{"text": "the question", "keywords": ["4 to 6 key points a good answer mentions"], "follow_up": "one short follow-up question"}}
 
-Rules: entry-level difficulty, one clear question, no multi-part lists, no personal data."""
+Rules: entry-level difficulty, one clear question, no multi-part lists, no personal data. Do not ask the candidate to write or run code."""
 
 
 def follow_up_prompt(role: str, skill: str, question: str, answer: str) -> str:

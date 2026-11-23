@@ -80,11 +80,13 @@ def _template_dict(t: QuestionTemplate, reason: str) -> dict:
             "keywords": t.keywords or [], "follow_up": t.follow_up or "", "reason": reason}
 
 
-def _generate_question(db: Session, role_title: str, skill: Skill, qtype: str, reason: str) -> dict:
+def _generate_question(
+    db: Session, role_title: str, skill: Skill, qtype: str, reason: str, responsibilities: list[str] | None = None
+) -> dict:
     """Asks the provider for one question. A Gemini question is saved as a new template marked
     "generated"; the offline stand-in is used once and not saved."""
     q, provider = run_json_task(
-        question_prompt(role_title, skill.name, qtype), LLMQuestion,
+        question_prompt(role_title, skill.name, qtype, responsibilities), LLMQuestion,
         task="question", skill=skill.name, role=role_title, type=qtype,
     )
     template_id = None
@@ -101,7 +103,8 @@ def _generate_question(db: Session, role_title: str, skill: Skill, qtype: str, r
 
 
 def select_questions(
-    db: Session, role_title: str, required: list[dict], weak: list[str], gaps: list[str], count: int
+    db: Session, role_title: str, required: list[dict], weak: list[str], gaps: list[str], count: int,
+    responsibilities: list[str] | None = None,
 ) -> list[dict]:
     """Persistent weaknesses first, then CV gaps, then the role's highest-weighted skills, and
     always at least one behavioural question."""
@@ -133,7 +136,7 @@ def select_questions(
         if pool:
             picked.append(_template_dict(random.choice(pool), reason(name)))
         elif name in skills:
-            picked.append(_generate_question(db, role_title, skills[name], "technical", reason(name)))
+            picked.append(_generate_question(db, role_title, skills[name], "technical", reason(name), responsibilities))
         else:
             continue
         used.add(name)
@@ -146,7 +149,7 @@ def select_questions(
         else:
             name = next((n for n in BEHAVIOURAL_FALLBACK_SKILLS if n in skills), None) or next(iter(role_skills), None)
             if name in skills:
-                q = _generate_question(db, role_title, skills[name], "behavioral", reason(name))
+                q = _generate_question(db, role_title, skills[name], "behavioral", reason(name), responsibilities)
         if q is not None:
             if len(picked) >= count:
                 picked[-1] = q
@@ -169,7 +172,7 @@ def start(db: Session, user: User, body: StartIn) -> dict:
         role, required = job.role, weighted_skills(job.skills)
     else:
         role = db.get(JobRole, body.role_id, options=[selectinload(JobRole.skills).selectinload(RoleSkill.skill)])
-        if role is None:
+        if role is None or not role.active:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="That role doesn't exist.")
         required = weighted_skills(role.skills)
 
@@ -182,7 +185,7 @@ def start(db: Session, user: User, body: StartIn) -> dict:
         gaps = [s["name"] for s in [*match["missing"], *match["partial"]]]
 
     count = body.count or int(rules["defaultQuestions"])
-    questions = select_questions(db, role.title, required, weak, gaps, count)
+    questions = select_questions(db, role.title, required, weak, gaps, count, role.responsibilities or [])
     if not questions:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No questions are available for this role yet.")
 

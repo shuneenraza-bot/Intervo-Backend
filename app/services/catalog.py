@@ -27,8 +27,10 @@ def load_skills(db: Session) -> list[dict]:
 
 
 def load_config(db: Session) -> dict:
+    """The public configuration. Inactive roles are left out."""
     roles = db.scalars(
-        select(JobRole).options(selectinload(JobRole.skills).selectinload(RoleSkill.skill)).order_by(JobRole.title)
+        select(JobRole).where(JobRole.active.is_(True))
+        .options(selectinload(JobRole.skills).selectinload(RoleSkill.skill)).order_by(JobRole.title)
     )
     questions = db.scalars(
         select(QuestionTemplate).options(selectinload(QuestionTemplate.skill)).order_by(QuestionTemplate.id)
@@ -37,7 +39,8 @@ def load_config(db: Session) -> dict:
         "domains": [{"id": d.id, "name": d.name} for d in db.scalars(select(Domain).order_by(Domain.name))],
         "skills": load_skills(db),
         "roles": [
-            {"id": r.id, "title": r.title, "domainId": r.domain_id, "skills": weighted_skills(r.skills)}
+            {"id": r.id, "title": r.title, "domainId": r.domain_id, "skills": weighted_skills(r.skills),
+             "responsibilities": r.responsibilities or []}
             for r in roles
         ],
         "questions": [

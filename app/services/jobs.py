@@ -80,7 +80,8 @@ def list_jobs(db: Session, user: User) -> JobsResponse:
 
 
 def _apply_job_fields(db: Session, job: Job, body: JobIn) -> None:
-    if db.get(JobRole, body.role_id) is None:
+    role = db.get(JobRole, body.role_id)
+    if role is None or (not role.active and job.role_id != body.role_id):
         raise _error(422, "Choose a job role from the list.")
 
     names = [s.name for s in body.skills]

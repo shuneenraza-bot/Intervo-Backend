@@ -44,11 +44,21 @@ class RoleIn(CamelModel):
     title: str = Field(max_length=160)
     domain_id: str
     skills: list[WeightedSkill] = Field(min_length=1, max_length=50)
+    responsibilities: list[str] = Field(default_factory=list, max_length=12)  # short lines
+    active: bool | None = None  # omitted = keep the current value (new roles start active)
 
     @field_validator("title")
     @classmethod
     def title_not_blank(cls, v: str) -> str:
         return _clean(v, "Give the role a title.")
+
+    @field_validator("responsibilities")
+    @classmethod
+    def responsibilities_clean(cls, v: list[str]) -> list[str]:
+        lines = _clean_list(v)
+        if any(len(line) > 160 for line in lines):
+            raise ValueError("Keep each responsibility under 160 characters.")
+        return lines
 
 
 class RoleOut(CamelModel):
@@ -56,6 +66,8 @@ class RoleOut(CamelModel):
     title: str
     domain_id: str
     skills: list[WeightedSkill]
+    responsibilities: list[str]
+    active: bool
 
 
 class SkillIn(CamelModel):

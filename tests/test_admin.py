@@ -352,3 +352,29 @@ def test_reset_face_is_admin_only_and_needs_a_real_user(client, admin, candidate
     assert client.post("/api/admin/users/nobody/reset-face", headers=admin).status_code == 404
     # A candidate can't reset their own face either; it stays enrolled.
     assert client.get("/api/auth/me", headers=bearer(candidate["token"])).status_code == 200
+
+
+def test_role_responsibilities_and_active_flag(client, admin, lib):
+    body = {"title": "UI Engineer", "domainId": lib["domain"]["id"], "skills": [{"name": "React", "weight": 3}],
+            "responsibilities": ["  Build screens ", "Fix bugs", "Fix bugs", ""]}
+    role = post(client, admin, "/roles", body)
+    assert role["responsibilities"] == ["Build screens", "Fix bugs"] and role["active"] is True
+    assert client.post("/api/admin/roles", json={**body, "title": "Long", "responsibilities": ["x" * 161]}, headers=admin).status_code == 422
+
+    # omitting `active` keeps it; inactive roles leave the public config but stay in the admin list
+    res = client.put(f"/api/admin/roles/{role['id']}", json={**body, "active": False}, headers=admin)
+    assert res.status_code == 200 and res.json()["active"] is False
+    res = client.put(f"/api/admin/roles/{role['id']}", json=body, headers=admin)
+    assert res.json()["active"] is False
+    assert role["id"] in [r["id"] for r in client.get("/api/admin/roles", headers=admin).json()]
+    _, employer_headers = signup(client, employer_payload())
+    config_roles = client.get("/api/config", headers=employer_headers).json()["roles"]
+    assert role["id"] not in [r["id"] for r in config_roles]
+    assert next(r for r in config_roles if r["id"] == lib["role"]["id"])["responsibilities"] == []
+
+    # a new job can't use an inactive role
+    job = {"title": "UI Intern", "roleId": role["id"], "mode": "Remote", "location": "Lahore",
+           "skills": [{"name": "React", "weight": 3}], "success": {"minMatch": 50, "notes": ""}}
+    assert client.post("/api/jobs", json=job, headers=employer_headers).status_code == 422
+    candidate_headers = bearer(signup_full(client, candidate_payload())["token"])
+    assert client.post("/api/interviews", json={"roleId": role["id"], "mode": "text"}, headers=candidate_headers).status_code == 404

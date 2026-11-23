@@ -39,7 +39,7 @@ erDiagram
         varchar(255) email UK
         varchar(255) password_hash
         varchar(160) company "nullable"
-        jsonb face_template "nullable"
+        json face_template "nullable"
         timestamptz face_enrolled_at "nullable"
         timestamptz last_login_at "nullable"
         varchar(20) last_login_method "nullable"
@@ -84,6 +84,8 @@ erDiagram
         varchar(40) id PK
         varchar(40) domain_id FK
         varchar(160) title
+        jsonb responsibilities
+        boolean active
         timestamptz created_at
         timestamptz updated_at
     }
@@ -166,7 +168,7 @@ erDiagram
     }
     application_status_history {
         varchar(40) id PK
-        varchar(40) application_id FK
+        varchar(40) application_id FK, UK
         varchar(30) status
         text employer_message "nullable"
         text candidate_note "nullable"
