@@ -183,7 +183,7 @@ def test_question_crud(client, admin, lib):
     body = {"skill": "React", "type": "technical", "text": "  What is a component?  ", "keywords": [" State ", "props", "state"], "followUp": "Give an example."}
     q = post(client, admin, "/questions", body)
     assert q == {"id": q["id"], "skill": "React", "type": "technical", "text": "What is a component?",
-                 "keywords": ["state", "props"], "followUp": "Give an example."}
+                 "keywords": ["state", "props"], "followUp": "Give an example.", "difficulty": "medium"}
 
     assert post(client, admin, "/questions", {**body, "text": "what is a component?"}, 409)["detail"] == "React already has this question."
     assert client.post("/api/admin/questions", json={**body, "text": "short"}, headers=admin).status_code == 422

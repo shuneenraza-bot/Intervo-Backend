@@ -45,7 +45,7 @@ def load_config(db: Session) -> dict:
         ],
         "questions": [
             {"id": q.id, "skill": q.skill.name, "type": q.type, "text": q.text,
-             "keywords": q.keywords or [], "followUp": q.follow_up}
+             "keywords": q.keywords or [], "followUp": q.follow_up, "difficulty": q.difficulty}
             for q in questions
         ],
         "criteria": [

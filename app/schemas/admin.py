@@ -111,6 +111,7 @@ class QuestionIn(CamelModel):
     text: str = Field(max_length=1000)
     keywords: list[str] = Field(default_factory=list, max_length=30)
     follow_up: str = Field(default="", max_length=1000)
+    difficulty: Literal["easy", "medium", "hard"] = "medium"
 
     @field_validator("text")
     @classmethod
@@ -138,6 +139,7 @@ class QuestionOut(CamelModel):
     text: str
     keywords: list[str]
     follow_up: str
+    difficulty: str = "medium"
 
 
 class CriterionIn(CamelModel):
