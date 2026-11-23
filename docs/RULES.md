@@ -134,7 +134,7 @@ Fixed after the first audit (same day): encrypted face templates, server-checked
 What still differs from a strict reading of the rules:
 
 1. **Blink evidence is reported by the browser.** The server checks that it looks like a real blink, but cannot prove the frames came from a camera.
-2. **Face encryption key.** If `FACE_ENCRYPTION_KEY` is not set, the key comes from `JWT_SECRET`; rotating that secret would make stored faces unreadable until users re-enrol.
+2. **Face encryption key.** If `FACE_ENCRYPTION_KEY` is not set, the key comes from `JWT_SECRET`; rotating that secret would make stored faces unreadable until users re-enrol. To move to a separate key (or rotate it) run `python -m scripts.rotate_face_key` with the server stopped, then put the line it prints in `.env`.
 3. **JD weight "otherwise 2"** is really "the role's skill weight, else 2". The keyword lists are longer than the rule (`strong`, `essential`, `proficient`, `familiar`, …).
 4. **CV heading/date/degree/CGPA regex rules** apply only when Gemini is off or fails (rule-based fallback). With Gemini these fields come from the model; skill matching, contact patterns and experience months always run in Python.
 5. **Frontend local mode** (no backend) hashes passwords with salted SHA-256 (not Argon2), keeps lockout counters in localStorage and holds its own copies of the CV and scoring rules. It is a known limitation of the demo mode and can drift from the backend.
