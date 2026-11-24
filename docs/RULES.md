@@ -55,6 +55,7 @@ Two things apply to many rows:
 | No repeated skill | IMPLEMENTED | One question per skill (`used` set) | `interview.py:123-140` |
 | Default count | IMPLEMENTED | 5 (`defaultQuestions`, admin-configurable). Client may send 1-10 | `interview.py:41`, `:184`; `app/schemas/interview.py:21`; `app/services/admin.py:50` |
 | Skill with no template | extra | Gemini writes a technical question and saves it as a "generated" template; rules fallback gives a generic one that is not saved | `interview.py:83-100`, `:136` |
+| Recently answered templates are skipped | IMPLEMENTED | A template the candidate answered in their last 3 sessions is not picked while another template for that skill exists. If all are used, Gemini writes a new question; with Gemini off, the least recently used template is asked again. Unanswered questions do not count. Question bank: `scripts/data/question_templates.json`, loaded by `python -m scripts.load_question_templates` | `app/services/interview.py` (`_recent_template_ids`, `select_questions`); FE `src/lib.js` (`recentQuestionIds`); `tests/test_question_templates.py` |
 
 ## 5. Scoring
 

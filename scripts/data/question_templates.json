@@ -1,0 +1,5557 @@
+{
+ "version": 1,
+ "templates": [
+  {
+   "id": "react-c1",
+   "skill": "React",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a component in React, and why do developers split a page into many small components?",
+   "keywords": [
+    "reusable",
+    "ui",
+    "props",
+    "small pieces",
+    "maintain"
+   ],
+   "followUp": "Can you name a page you would split into components, and which ones?"
+  },
+  {
+   "id": "react-c2",
+   "skill": "React",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a re-render is in React and what can make a page slow because of too many of them.",
+   "keywords": [
+    "state change",
+    "re-render",
+    "virtual dom",
+    "slow",
+    "unnecessary"
+   ],
+   "followUp": "How would you find out which component is re-rendering too often?"
+  },
+  {
+   "id": "react-a1",
+   "skill": "React",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You are asked to build a signup form with name, email and password fields. How would you keep track of what the user types?",
+   "keywords": [
+    "state",
+    "controlled input",
+    "onchange",
+    "validation",
+    "submit"
+   ],
+   "followUp": "How would you show an error message under the email field?"
+  },
+  {
+   "id": "react-a2",
+   "skill": "React",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A product list page in your React app shows old data after the user adds a new item. How would you find and fix the cause?",
+   "keywords": [
+    "state",
+    "update",
+    "refresh",
+    "api",
+    "re-render",
+    "debug"
+   ],
+   "followUp": "How would you stop this problem from coming back?"
+  },
+  {
+   "id": "react-e1",
+   "skill": "React",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you built a React project, even a small one. What did it do and what was your part?",
+   "keywords": [
+    "project",
+    "component",
+    "state",
+    "api",
+    "learned"
+   ],
+   "followUp": "What would you improve in that project if you had one more week?"
+  },
+  {
+   "id": "javascript-c1",
+   "skill": "JavaScript",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between let, const and var in JavaScript?",
+   "keywords": [
+    "scope",
+    "reassign",
+    "const",
+    "block",
+    "hoisting"
+   ],
+   "followUp": "When would you choose const over let?"
+  },
+  {
+   "id": "javascript-c2",
+   "skill": "JavaScript",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a promise is in JavaScript and why it is better than nesting many callbacks.",
+   "keywords": [
+    "promise",
+    "asynchronous",
+    "callback",
+    "then",
+    "error handling",
+    "readable"
+   ],
+   "followUp": "What happens if a promise fails and nobody handles the error?"
+  },
+  {
+   "id": "javascript-a1",
+   "skill": "JavaScript",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A button on your web page should show a message when clicked. How would you make that happen with JavaScript?",
+   "keywords": [
+    "event",
+    "listener",
+    "click",
+    "dom",
+    "message"
+   ],
+   "followUp": "How would you stop the button being clicked twice by mistake?"
+  },
+  {
+   "id": "javascript-a2",
+   "skill": "JavaScript",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your page fetches a list of jobs from an API, but the screen stays blank when the internet is slow. How would you improve this?",
+   "keywords": [
+    "loading",
+    "error",
+    "timeout",
+    "fetch",
+    "message",
+    "retry"
+   ],
+   "followUp": "What would the user see if the server returns an error?"
+  },
+  {
+   "id": "javascript-e1",
+   "skill": "JavaScript",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you used JavaScript to solve a real problem in a project or at university.",
+   "keywords": [
+    "problem",
+    "feature",
+    "browser",
+    "result",
+    "learned"
+   ],
+   "followUp": "What was the hardest bug you met there and how did you find it?"
+  },
+  {
+   "id": "html-c1",
+   "skill": "HTML",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a div and a section, and why does it matter?",
+   "keywords": [
+    "semantic",
+    "meaning",
+    "structure",
+    "accessibility",
+    "search engines"
+   ],
+   "followUp": "Which other semantic tags do you remember?"
+  },
+  {
+   "id": "html-c2",
+   "skill": "HTML",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what the alt text on an image is for, and what makes a good one.",
+   "keywords": [
+    "accessibility",
+    "screen reader",
+    "description",
+    "seo",
+    "image fails"
+   ],
+   "followUp": "When should an image have empty alt text?"
+  },
+  {
+   "id": "html-a1",
+   "skill": "HTML",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You need to build a simple contact page with a form for name, email and message. Which HTML elements would you use?",
+   "keywords": [
+    "form",
+    "label",
+    "input",
+    "textarea",
+    "button",
+    "required"
+   ],
+   "followUp": "Why is it better to connect each label to its input?"
+  },
+  {
+   "id": "html-a2",
+   "skill": "HTML",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A blog page you built is hard to read with a screen reader. What would you check and change?",
+   "keywords": [
+    "headings",
+    "landmarks",
+    "alt text",
+    "labels",
+    "order",
+    "keyboard"
+   ],
+   "followUp": "How would you test it yourself without a screen reader expert?"
+  },
+  {
+   "id": "html-e1",
+   "skill": "HTML",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you built a web page from scratch. How did you plan its structure?",
+   "keywords": [
+    "structure",
+    "sketch",
+    "sections",
+    "tags",
+    "result"
+   ],
+   "followUp": "What would you change in its structure today?"
+  },
+  {
+   "id": "css-c1",
+   "skill": "CSS",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the CSS box model? Explain it as you would to a friend.",
+   "keywords": [
+    "content",
+    "padding",
+    "border",
+    "margin",
+    "spacing"
+   ],
+   "followUp": "What is the difference between padding and margin?"
+  },
+  {
+   "id": "css-c2",
+   "skill": "CSS",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between flexbox and grid. When would you pick each one?",
+   "keywords": [
+    "one dimension",
+    "two dimensions",
+    "rows",
+    "columns",
+    "layout",
+    "alignment"
+   ],
+   "followUp": "Can they be used together on one page?"
+  },
+  {
+   "id": "css-a1",
+   "skill": "CSS",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Your text is too small and hard to read on a phone. How would you fix it?",
+   "keywords": [
+    "font size",
+    "relative units",
+    "viewport",
+    "media query",
+    "readable"
+   ],
+   "followUp": "Which font size would you start with for body text?"
+  },
+  {
+   "id": "css-a2",
+   "skill": "CSS",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A card layout looks fine on your laptop, but on a small phone the cards overflow and a sideways scrollbar appears. How would you fix it?",
+   "keywords": [
+    "responsive",
+    "flexible width",
+    "wrap",
+    "max width",
+    "media query",
+    "test"
+   ],
+   "followUp": "How would you check the fix on many phone sizes?"
+  },
+  {
+   "id": "css-e1",
+   "skill": "CSS",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you copied or recreated a design in CSS. What was difficult and how did you manage?",
+   "keywords": [
+    "design",
+    "layout",
+    "spacing",
+    "browser",
+    "result"
+   ],
+   "followUp": "How close did you get to the original, and how did you check?"
+  },
+  {
+   "id": "git-c1",
+   "skill": "Git",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is version control, and why do software teams use Git?",
+   "keywords": [
+    "history",
+    "undo",
+    "teamwork",
+    "branches",
+    "backup"
+   ],
+   "followUp": "What would happen to a team that shares code through email or USB drives?"
+  },
+  {
+   "id": "git-c2",
+   "skill": "Git",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between a commit, a branch and a pull request.",
+   "keywords": [
+    "commit",
+    "snapshot",
+    "branch",
+    "separate",
+    "review",
+    "merge"
+   ],
+   "followUp": "Why do teams often forbid pushing straight to the main branch?"
+  },
+  {
+   "id": "git-a1",
+   "skill": "Git",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You made some wrong changes in a file and have not committed yet. How would you get the file back to how it was?",
+   "keywords": [
+    "restore",
+    "checkout",
+    "discard",
+    "status",
+    "careful"
+   ],
+   "followUp": "How would you check what you changed before throwing it away?"
+  },
+  {
+   "id": "git-a2",
+   "skill": "Git",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You and a teammate both edited the same part of a file and Git reports a conflict. What would you do?",
+   "keywords": [
+    "conflict",
+    "talk",
+    "compare",
+    "keep",
+    "test",
+    "commit"
+   ],
+   "followUp": "How would you avoid conflicts like this in the future?"
+  },
+  {
+   "id": "git-e1",
+   "skill": "Git",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used Git or GitHub in a project. How did you use it with other people?",
+   "keywords": [
+    "repository",
+    "branch",
+    "commit",
+    "team",
+    "learned"
+   ],
+   "followUp": "What mistake did you make with Git and what did you learn from it?"
+  },
+  {
+   "id": "testing-c1",
+   "skill": "Testing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a unit test and an integration test?",
+   "keywords": [
+    "small part",
+    "together",
+    "fast",
+    "modules",
+    "bug"
+   ],
+   "followUp": "Which of the two would you write first for a new feature, and why?"
+  },
+  {
+   "id": "testing-c2",
+   "skill": "Testing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what test coverage means and why one hundred percent coverage does not guarantee good software.",
+   "keywords": [
+    "coverage",
+    "lines",
+    "quality",
+    "edge cases",
+    "meaningful"
+   ],
+   "followUp": "What would you do to make sure the tests are really useful?"
+  },
+  {
+   "id": "testing-a1",
+   "skill": "Testing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You build a function that calculates a discount for a shopping cart. Which situations would you test?",
+   "keywords": [
+    "normal",
+    "zero",
+    "negative",
+    "large",
+    "limits",
+    "expected"
+   ],
+   "followUp": "Which of these would you test first, and why?"
+  },
+  {
+   "id": "testing-a2",
+   "skill": "Testing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A bug returns after you fixed it last month. How would you stop it from coming back?",
+   "keywords": [
+    "regression",
+    "test",
+    "reproduce",
+    "automated",
+    "ci"
+   ],
+   "followUp": "How would your team know a test failed before releasing?"
+  },
+  {
+   "id": "testing-e1",
+   "skill": "Testing",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time testing helped you catch a problem before users saw it.",
+   "keywords": [
+    "test",
+    "bug",
+    "caught",
+    "fixed",
+    "learned"
+   ],
+   "followUp": "What would have happened if you had not tested it?"
+  },
+  {
+   "id": "typescript-c1",
+   "skill": "TypeScript",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What does TypeScript add to JavaScript, in simple words?",
+   "keywords": [
+    "types",
+    "errors",
+    "compile",
+    "editor",
+    "safer"
+   ],
+   "followUp": "Does TypeScript run directly in the browser?"
+  },
+  {
+   "id": "typescript-c2",
+   "skill": "TypeScript",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what an interface is in TypeScript and why a team would define one for an API response.",
+   "keywords": [
+    "shape",
+    "fields",
+    "contract",
+    "types",
+    "reuse",
+    "autocomplete"
+   ],
+   "followUp": "What happens if the API sends a field that is not in your interface?"
+  },
+  {
+   "id": "typescript-a1",
+   "skill": "TypeScript",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You get a user object from the server with name, age and email. How would you describe its shape so mistakes are caught early?",
+   "keywords": [
+    "interface",
+    "type",
+    "fields",
+    "optional",
+    "string",
+    "number"
+   ],
+   "followUp": "How would you mark that the email may be missing?"
+  },
+  {
+   "id": "typescript-a2",
+   "skill": "TypeScript",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your team has an old JavaScript project and wants to move to TypeScript step by step. How would you plan it?",
+   "keywords": [
+    "gradual",
+    "config",
+    "one file",
+    "types",
+    "risk",
+    "tests"
+   ],
+   "followUp": "Which files would you convert first?"
+  },
+  {
+   "id": "typescript-e1",
+   "skill": "TypeScript",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time a type error saved you from a bug, or when you learned TypeScript.",
+   "keywords": [
+    "type",
+    "error",
+    "caught",
+    "learned",
+    "project"
+   ],
+   "followUp": "How long did it take you to feel comfortable with it?"
+  },
+  {
+   "id": "python-c1",
+   "skill": "Python",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a list and what is a dictionary in Python? Give one example of each from daily life.",
+   "keywords": [
+    "list",
+    "order",
+    "dictionary",
+    "key",
+    "value",
+    "example"
+   ],
+   "followUp": "Which one would you use to store student names and their marks?"
+  },
+  {
+   "id": "python-c2",
+   "skill": "Python",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a virtual environment is in Python and why developers use one for each project.",
+   "keywords": [
+    "isolated",
+    "packages",
+    "versions",
+    "conflict",
+    "requirements"
+   ],
+   "followUp": "What problem would you face without one?"
+  },
+  {
+   "id": "python-a1",
+   "skill": "Python",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You have a text file with the names of a hundred students. How would you find out which names appear twice?",
+   "keywords": [
+    "read file",
+    "loop",
+    "count",
+    "duplicate",
+    "set",
+    "dictionary"
+   ],
+   "followUp": "How would you handle names written with different capital letters?"
+  },
+  {
+   "id": "python-a2",
+   "skill": "Python",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A Python script that processes a large Excel sheet takes very long. How would you find the reason and improve it?",
+   "keywords": [
+    "measure",
+    "slow part",
+    "loop",
+    "library",
+    "pandas",
+    "memory"
+   ],
+   "followUp": "How would you know that your change really made it faster?"
+  },
+  {
+   "id": "python-e1",
+   "skill": "Python",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used Python for a task or project. What problem did it solve?",
+   "keywords": [
+    "project",
+    "library",
+    "automation",
+    "result",
+    "learned"
+   ],
+   "followUp": "What did you find most difficult about Python at first?"
+  },
+  {
+   "id": "sql-c1",
+   "skill": "SQL",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a primary key and why does every table need one?",
+   "keywords": [
+    "unique",
+    "identify",
+    "row",
+    "no duplicates",
+    "not empty"
+   ],
+   "followUp": "Can a primary key be made of more than one column?"
+  },
+  {
+   "id": "sql-c2",
+   "skill": "SQL",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between WHERE and HAVING in SQL.",
+   "keywords": [
+    "filter",
+    "rows",
+    "groups",
+    "aggregate",
+    "before",
+    "after"
+   ],
+   "followUp": "Can you give a small business example for each?"
+  },
+  {
+   "id": "sql-a1",
+   "skill": "SQL",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A shop stores orders in one table and customers in another. How would you list each order with the customer name?",
+   "keywords": [
+    "join",
+    "customer id",
+    "match",
+    "columns",
+    "orders"
+   ],
+   "followUp": "What would happen to an order whose customer is missing?"
+  },
+  {
+   "id": "sql-a2",
+   "skill": "SQL",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your manager asks for the top five products by sales in the last month. How would you get this from the database?",
+   "keywords": [
+    "filter date",
+    "group by",
+    "sum",
+    "order",
+    "limit",
+    "product"
+   ],
+   "followUp": "How would you handle two products with the same total?"
+  },
+  {
+   "id": "sql-e1",
+   "skill": "SQL",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you worked with a database or SQL for a project or course.",
+   "keywords": [
+    "database",
+    "tables",
+    "query",
+    "result",
+    "learned"
+   ],
+   "followUp": "What was the biggest mistake you made with data and how did you fix it?"
+  },
+  {
+   "id": "rest-apis-c1",
+   "skill": "REST APIs",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is an API, and what does REST mean in simple words?",
+   "keywords": [
+    "request",
+    "response",
+    "resource",
+    "url",
+    "http",
+    "json"
+   ],
+   "followUp": "Can you give an example of an API you use every day?"
+  },
+  {
+   "id": "rest-apis-c2",
+   "skill": "REST APIs",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between GET, POST, PUT and DELETE, and what each is used for.",
+   "keywords": [
+    "read",
+    "create",
+    "update",
+    "remove",
+    "idempotent",
+    "method"
+   ],
+   "followUp": "Which of these should never change data on the server?"
+  },
+  {
+   "id": "rest-apis-a1",
+   "skill": "REST APIs",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You need an endpoint where a user can see their own profile. How would you design its URL and its answer?",
+   "keywords": [
+    "resource",
+    "url",
+    "get",
+    "json",
+    "authentication",
+    "status"
+   ],
+   "followUp": "What would you return if the user is not logged in?"
+  },
+  {
+   "id": "rest-apis-a2",
+   "skill": "REST APIs",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A mobile app calls your API and sometimes gets a very slow answer for a long list. How would you improve it?",
+   "keywords": [
+    "pagination",
+    "limit",
+    "filter",
+    "index",
+    "cache",
+    "size"
+   ],
+   "followUp": "How would the app ask for the next page?"
+  },
+  {
+   "id": "rest-apis-e1",
+   "skill": "REST APIs",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you used or built an API. What did you connect and what went wrong?",
+   "keywords": [
+    "api",
+    "request",
+    "response",
+    "error",
+    "result",
+    "learned"
+   ],
+   "followUp": "How did you read the API documentation to find your answer?"
+  },
+  {
+   "id": "problem-solving-s1",
+   "skill": "Problem solving",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you faced a problem you had never seen before. What was the situation and what did you do?",
+   "keywords": [
+    "situation",
+    "steps",
+    "research",
+    "tried",
+    "result"
+   ],
+   "followUp": "What would you do differently if it happened again?"
+  },
+  {
+   "id": "problem-solving-s2",
+   "skill": "Problem solving",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Describe a time you found the root cause of a problem instead of fixing only the symptoms.",
+   "keywords": [
+    "cause",
+    "investigated",
+    "evidence",
+    "fix",
+    "prevented"
+   ],
+   "followUp": "How did you know you had found the real cause?"
+  },
+  {
+   "id": "problem-solving-s3",
+   "skill": "Problem solving",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you were stuck on a task and could not find the answer alone. What did you do?",
+   "keywords": [
+    "stuck",
+    "searched",
+    "asked",
+    "helped",
+    "solved"
+   ],
+   "followUp": "How long do you try before you ask someone for help?"
+  },
+  {
+   "id": "problem-solving-s4",
+   "skill": "Problem solving",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Give an example of a time when your first solution did not work. How did you react?",
+   "keywords": [
+    "failed",
+    "analysed",
+    "changed",
+    "second try",
+    "result"
+   ],
+   "followUp": "What did you learn about your own way of working?"
+  },
+  {
+   "id": "problem-solving-s5",
+   "skill": "Problem solving",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Describe a time you solved a problem with limited time or resources.",
+   "keywords": [
+    "limited",
+    "priority",
+    "options",
+    "chosen",
+    "result"
+   ],
+   "followUp": "What did you decide not to do, and why?"
+  },
+  {
+   "id": "problem-solving-s6",
+   "skill": "Problem solving",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Tell me about a time you helped others solve a difficult problem. What was your role?",
+   "keywords": [
+    "team",
+    "role",
+    "ideas",
+    "decision",
+    "result"
+   ],
+   "followUp": "How did you make sure everyone's ideas were heard?"
+  },
+  {
+   "id": "docker-c1",
+   "skill": "Docker",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a container, and how is it different from a virtual machine?",
+   "keywords": [
+    "container",
+    "lightweight",
+    "share",
+    "operating system",
+    "virtual machine",
+    "start"
+   ],
+   "followUp": "Why can containers start much faster?"
+  },
+  {
+   "id": "docker-c2",
+   "skill": "Docker",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a Docker image and a Docker container are, and how they are related.",
+   "keywords": [
+    "image",
+    "template",
+    "container",
+    "running",
+    "layers",
+    "registry"
+   ],
+   "followUp": "Where do teams usually store their images?"
+  },
+  {
+   "id": "docker-a1",
+   "skill": "Docker",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A teammate says the app works on their laptop but not on yours. How could Docker help?",
+   "keywords": [
+    "same environment",
+    "dependencies",
+    "versions",
+    "image",
+    "consistent"
+   ],
+   "followUp": "What would you share with your teammate so you both run the same thing?"
+  },
+  {
+   "id": "docker-a2",
+   "skill": "Docker",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You want to run a web app and its database together on your laptop. How would you set it up with containers?",
+   "keywords": [
+    "two containers",
+    "network",
+    "compose",
+    "volume",
+    "ports",
+    "config"
+   ],
+   "followUp": "What would happen to the database data when you remove the container?"
+  },
+  {
+   "id": "docker-e1",
+   "skill": "Docker",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used Docker, or another tool, to set up a project environment.",
+   "keywords": [
+    "setup",
+    "environment",
+    "docker",
+    "problem",
+    "result"
+   ],
+   "followUp": "What would you tell a beginner about starting with Docker?"
+  },
+  {
+   "id": "manual-testing-c1",
+   "skill": "Manual testing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between functional testing and regression testing?",
+   "keywords": [
+    "new feature",
+    "existing",
+    "break",
+    "repeat",
+    "functional",
+    "regression"
+   ],
+   "followUp": "When would you run regression tests?"
+  },
+  {
+   "id": "manual-testing-c2",
+   "skill": "Manual testing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain exploratory testing and when it is more useful than following written test cases.",
+   "keywords": [
+    "explore",
+    "without script",
+    "learning",
+    "unexpected",
+    "time",
+    "experience"
+   ],
+   "followUp": "How do you keep notes during exploratory testing?"
+  },
+  {
+   "id": "manual-testing-a1",
+   "skill": "Manual testing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You are testing a mobile recharge app. What would you check on the payment screen?",
+   "keywords": [
+    "amount",
+    "wrong number",
+    "payment fails",
+    "network",
+    "message",
+    "balance"
+   ],
+   "followUp": "Which of those checks matters most, and why?"
+  },
+  {
+   "id": "manual-testing-a2",
+   "skill": "Manual testing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "The developer says your reported bug is not a bug but a feature. How would you handle this?",
+   "keywords": [
+    "requirement",
+    "evidence",
+    "discuss",
+    "document",
+    "owner",
+    "calm"
+   ],
+   "followUp": "Who would you ask to decide if you still disagree?"
+  },
+  {
+   "id": "manual-testing-e1",
+   "skill": "Manual testing",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you tested a website or an app. What did you find?",
+   "keywords": [
+    "tested",
+    "bug",
+    "steps",
+    "reported",
+    "learned"
+   ],
+   "followUp": "What did you do to find bugs that were not obvious?"
+  },
+  {
+   "id": "test-case-design-c1",
+   "skill": "Test case design",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a test case and a test scenario?",
+   "keywords": [
+    "scenario",
+    "high level",
+    "steps",
+    "expected result",
+    "detail"
+   ],
+   "followUp": "Can you give one scenario and two test cases from it?"
+  },
+  {
+   "id": "test-case-design-c2",
+   "skill": "Test case design",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain equivalence partitioning and boundary value analysis with a simple example.",
+   "keywords": [
+    "groups",
+    "valid",
+    "invalid",
+    "edges",
+    "limits",
+    "examples"
+   ],
+   "followUp": "How would you test a field that accepts marks from 0 to 100?"
+  },
+  {
+   "id": "test-case-design-a1",
+   "skill": "Test case design",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "How would you design test cases for a search box on a job website?",
+   "keywords": [
+    "valid search",
+    "empty",
+    "special characters",
+    "no results",
+    "long text",
+    "expected"
+   ],
+   "followUp": "Which negative cases would you add?"
+  },
+  {
+   "id": "test-case-design-a2",
+   "skill": "Test case design",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You have only one day to test a large feature. How would you decide which test cases to run first?",
+   "keywords": [
+    "priority",
+    "risk",
+    "critical",
+    "common path",
+    "time",
+    "coverage"
+   ],
+   "followUp": "What would you tell the team about the cases you skipped?"
+  },
+  {
+   "id": "test-case-design-e1",
+   "skill": "Test case design",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you wrote test cases or checks for a feature. How did you decide what to cover?",
+   "keywords": [
+    "requirements",
+    "cases",
+    "coverage",
+    "review",
+    "result"
+   ],
+   "followUp": "How did you know your cases were complete?"
+  },
+  {
+   "id": "bug-reporting-c1",
+   "skill": "Bug reporting",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between severity and priority of a bug?",
+   "keywords": [
+    "severity",
+    "impact",
+    "priority",
+    "urgency",
+    "business"
+   ],
+   "followUp": "Can a low severity bug have a high priority, and can you give an example?"
+  },
+  {
+   "id": "bug-reporting-c2",
+   "skill": "Bug reporting",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what steps to reproduce means and why developers ask for them.",
+   "keywords": [
+    "reproduce",
+    "exact steps",
+    "environment",
+    "data",
+    "same result"
+   ],
+   "followUp": "What do you do if you cannot reproduce a bug yourself?"
+  },
+  {
+   "id": "bug-reporting-a1",
+   "skill": "Bug reporting",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You found that the Pay Now button does nothing on one phone but works on others. What would you include in the bug report?",
+   "keywords": [
+    "device",
+    "os version",
+    "steps",
+    "screenshot",
+    "expected",
+    "actual"
+   ],
+   "followUp": "How would you title this bug?"
+  },
+  {
+   "id": "bug-reporting-a2",
+   "skill": "Bug reporting",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A bug appears only sometimes. How would you report it so the developer can still investigate?",
+   "keywords": [
+    "intermittent",
+    "frequency",
+    "conditions",
+    "logs",
+    "video",
+    "pattern"
+   ],
+   "followUp": "How would you collect more evidence before reporting?"
+  },
+  {
+   "id": "bug-reporting-e1",
+   "skill": "Bug reporting",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you reported a bug or a problem to someone. How did you describe it?",
+   "keywords": [
+    "bug",
+    "steps",
+    "evidence",
+    "response",
+    "fixed"
+   ],
+   "followUp": "How did the other person respond and what did you learn?"
+  },
+  {
+   "id": "test-automation-selenium-c1",
+   "skill": "Test automation (Selenium)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is test automation and why do companies use it?",
+   "keywords": [
+    "repeat",
+    "faster",
+    "regression",
+    "tools",
+    "less manual"
+   ],
+   "followUp": "Can all testing be automated, or should some stay manual?"
+  },
+  {
+   "id": "test-automation-selenium-c2",
+   "skill": "Test automation (Selenium)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a locator is in browser automation and why unstable locators cause trouble.",
+   "keywords": [
+    "element",
+    "id",
+    "css",
+    "xpath",
+    "stable",
+    "change"
+   ],
+   "followUp": "Which kind of locator would you prefer and why?"
+  },
+  {
+   "id": "test-automation-selenium-a1",
+   "skill": "Test automation (Selenium)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Your team tests the login page by hand every release. How would you decide to automate it?",
+   "keywords": [
+    "repeat",
+    "stable",
+    "time saved",
+    "regression",
+    "value"
+   ],
+   "followUp": "What would you keep as a manual check?"
+  },
+  {
+   "id": "test-automation-selenium-a2",
+   "skill": "Test automation (Selenium)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "An automated test fails sometimes without any change in the app. How would you investigate?",
+   "keywords": [
+    "flaky",
+    "wait",
+    "timing",
+    "data",
+    "environment",
+    "rerun"
+   ],
+   "followUp": "When would you remove such a test from the suite?"
+  },
+  {
+   "id": "test-automation-selenium-e1",
+   "skill": "Test automation (Selenium)",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you used an automation tool or learned one. What did you automate?",
+   "keywords": [
+    "tool",
+    "automate",
+    "scenario",
+    "result",
+    "learned"
+   ],
+   "followUp": "How much time did it save?"
+  },
+  {
+   "id": "figma-c1",
+   "skill": "Figma",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a component in Figma, and why is it useful?",
+   "keywords": [
+    "component",
+    "reuse",
+    "update",
+    "consistent",
+    "master"
+   ],
+   "followUp": "What happens to the copies when you change the main component?"
+  },
+  {
+   "id": "figma-c2",
+   "skill": "Figma",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what auto layout does in Figma and why designers use it.",
+   "keywords": [
+    "spacing",
+    "resize",
+    "direction",
+    "responsive",
+    "padding",
+    "content"
+   ],
+   "followUp": "Can you give an example of a button or card where it helps?"
+  },
+  {
+   "id": "figma-a1",
+   "skill": "Figma",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You must design a mobile login screen in Figma. How would you start?",
+   "keywords": [
+    "frame",
+    "device size",
+    "layout",
+    "components",
+    "states",
+    "grid"
+   ],
+   "followUp": "What states would you design besides the normal screen?"
+  },
+  {
+   "id": "figma-a2",
+   "skill": "Figma",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A developer says your Figma design is unclear to build. What would you do to make the handoff smoother?",
+   "keywords": [
+    "spec",
+    "naming",
+    "spacing",
+    "export",
+    "notes",
+    "conversation"
+   ],
+   "followUp": "How would you check that the finished page matches your design?"
+  },
+  {
+   "id": "figma-e1",
+   "skill": "Figma",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you designed something in Figma. What was it and who was it for?",
+   "keywords": [
+    "design",
+    "user",
+    "screens",
+    "feedback",
+    "result"
+   ],
+   "followUp": "What feedback changed your design the most?"
+  },
+  {
+   "id": "user-research-c1",
+   "skill": "User research",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a user interview and a survey?",
+   "keywords": [
+    "interview",
+    "survey",
+    "depth",
+    "numbers",
+    "why",
+    "scale"
+   ],
+   "followUp": "Which would you pick for a first look at a new problem?"
+  },
+  {
+   "id": "user-research-c2",
+   "skill": "User research",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a persona is and one danger of using personas badly.",
+   "keywords": [
+    "persona",
+    "typical user",
+    "goals",
+    "assumptions",
+    "real data",
+    "stereotype"
+   ],
+   "followUp": "How do you make sure a persona comes from real data?"
+  },
+  {
+   "id": "user-research-a1",
+   "skill": "User research",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You designed a food delivery app for students. How would you find out whether students actually like it?",
+   "keywords": [
+    "users",
+    "interview",
+    "test",
+    "observe",
+    "feedback",
+    "tasks"
+   ],
+   "followUp": "How many students would you talk to at first?"
+  },
+  {
+   "id": "user-research-a2",
+   "skill": "User research",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Users say they like your design, but few finish the booking. How would you find out what is going wrong?",
+   "keywords": [
+    "analytics",
+    "drop off",
+    "observe",
+    "ask",
+    "hypothesis",
+    "test"
+   ],
+   "followUp": "What would you do after you find the problem?"
+  },
+  {
+   "id": "user-research-e1",
+   "skill": "User research",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you talked to users or classmates to learn what they needed. What did you learn?",
+   "keywords": [
+    "questions",
+    "users",
+    "findings",
+    "change",
+    "result"
+   ],
+   "followUp": "Which question gave you the most useful answer?"
+  },
+  {
+   "id": "wireframing-prototyping-c1",
+   "skill": "Wireframing & prototyping",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a user flow, and why do designers draw one before the screens?",
+   "keywords": [
+    "steps",
+    "path",
+    "goal",
+    "screens",
+    "decisions",
+    "user"
+   ],
+   "followUp": "What would a user flow for ordering food include?"
+  },
+  {
+   "id": "wireframing-prototyping-c2",
+   "skill": "Wireframing & prototyping",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain low-fidelity versus high-fidelity design and why teams usually start low.",
+   "keywords": [
+    "sketch",
+    "quick",
+    "cheap",
+    "detail",
+    "feedback",
+    "change"
+   ],
+   "followUp": "When is it time to move to high fidelity?"
+  },
+  {
+   "id": "wireframing-prototyping-a1",
+   "skill": "Wireframing & prototyping",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A small shop in Lahore wants a simple website for its menu and contact details. What screens would you wireframe?",
+   "keywords": [
+    "home",
+    "menu",
+    "contact",
+    "layout",
+    "navigation",
+    "mobile"
+   ],
+   "followUp": "What would you put at the top of the home page?"
+  },
+  {
+   "id": "wireframing-prototyping-a2",
+   "skill": "Wireframing & prototyping",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You show a clickable prototype to five users and three of them get lost on the same screen. What would you do?",
+   "keywords": [
+    "pattern",
+    "observe",
+    "confusion",
+    "change",
+    "retest",
+    "simplify"
+   ],
+   "followUp": "How would you know the new version is better?"
+  },
+  {
+   "id": "wireframing-prototyping-e1",
+   "skill": "Wireframing & prototyping",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you made a wireframe or prototype. How did you use feedback to improve it?",
+   "keywords": [
+    "wireframe",
+    "prototype",
+    "feedback",
+    "changes",
+    "result"
+   ],
+   "followUp": "What tool did you use and why?"
+  },
+  {
+   "id": "visual-design-c1",
+   "skill": "Visual design",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is visual hierarchy, and why does it matter on a screen?",
+   "keywords": [
+    "hierarchy",
+    "size",
+    "contrast",
+    "attention",
+    "order"
+   ],
+   "followUp": "How would you make the main button stand out?"
+  },
+  {
+   "id": "visual-design-c2",
+   "skill": "Visual design",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain colour contrast and why it matters for readability and accessibility.",
+   "keywords": [
+    "contrast",
+    "readable",
+    "background",
+    "low vision",
+    "standard",
+    "ratio"
+   ],
+   "followUp": "How would you check the contrast of a colour pair?"
+  },
+  {
+   "id": "visual-design-a1",
+   "skill": "Visual design",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A client wants a poster for a Ramzan sale with a lot of text. How would you organise the layout so people can read it quickly?",
+   "keywords": [
+    "headline",
+    "spacing",
+    "grouping",
+    "font",
+    "focus",
+    "whitespace"
+   ],
+   "followUp": "What would you remove if there is too much text?"
+  },
+  {
+   "id": "visual-design-a2",
+   "skill": "Visual design",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your app screen looks crowded with many buttons and texts. How would you clean it up?",
+   "keywords": [
+    "priority",
+    "spacing",
+    "group",
+    "remove",
+    "hierarchy",
+    "consistent"
+   ],
+   "followUp": "How would you test whether it is clearer now?"
+  },
+  {
+   "id": "visual-design-e1",
+   "skill": "Visual design",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a design you made that you are proud of. What choices did you make and why?",
+   "keywords": [
+    "design",
+    "choices",
+    "audience",
+    "reason",
+    "feedback"
+   ],
+   "followUp": "What would you change in it now?"
+  },
+  {
+   "id": "html-css-c1",
+   "skill": "HTML/CSS",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "Why should a designer know what a margin and a padding are, even if a developer builds the page?",
+   "keywords": [
+    "spacing",
+    "developer",
+    "handoff",
+    "box model",
+    "measure"
+   ],
+   "followUp": "Which one would you mention when handing a design over?"
+  },
+  {
+   "id": "html-css-c2",
+   "skill": "HTML/CSS",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what responsive design is and why a designer must plan for different screen sizes.",
+   "keywords": [
+    "screen sizes",
+    "layout",
+    "breakpoints",
+    "phone",
+    "desktop",
+    "adapt"
+   ],
+   "followUp": "How would you show these sizes in your design file?"
+  },
+  {
+   "id": "html-css-a1",
+   "skill": "HTML/CSS",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A developer says your button style is hard to build. How would you find a simpler version that keeps the idea?",
+   "keywords": [
+    "talk",
+    "constraint",
+    "simplify",
+    "style",
+    "compromise"
+   ],
+   "followUp": "What would you not change, and why?"
+  },
+  {
+   "id": "html-css-a2",
+   "skill": "HTML/CSS",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You design a page with a large hero image. How would you think about how it behaves on a small phone?",
+   "keywords": [
+    "crop",
+    "scale",
+    "text",
+    "readable",
+    "load time",
+    "breakpoint"
+   ],
+   "followUp": "How would you explain it to the developer?"
+  },
+  {
+   "id": "html-css-e1",
+   "skill": "HTML/CSS",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you worked with a developer or used HTML and CSS yourself. How did it go?",
+   "keywords": [
+    "developer",
+    "handoff",
+    "changes",
+    "result",
+    "learned"
+   ],
+   "followUp": "What would you do differently in the next handoff?"
+  },
+  {
+   "id": "excel-c1",
+   "skill": "Excel",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a formula and a function in Excel?",
+   "keywords": [
+    "formula",
+    "function",
+    "sum",
+    "cell",
+    "calculation"
+   ],
+   "followUp": "Can you name three functions you use often?"
+  },
+  {
+   "id": "excel-c2",
+   "skill": "Excel",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between VLOOKUP and a simple filter, and when you would use a lookup.",
+   "keywords": [
+    "lookup",
+    "match",
+    "key",
+    "table",
+    "value",
+    "filter"
+   ],
+   "followUp": "What problem can happen if the lookup values have extra spaces?"
+  },
+  {
+   "id": "excel-a1",
+   "skill": "Excel",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A shopkeeper gives you daily sales for a month and wants the total for each week. How would you do this in Excel?",
+   "keywords": [
+    "sum",
+    "date",
+    "week",
+    "pivot",
+    "group",
+    "check"
+   ],
+   "followUp": "How would you check that your totals are correct?"
+  },
+  {
+   "id": "excel-a2",
+   "skill": "Excel",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You get a sheet with customer names and phone numbers where many rows are duplicated or badly typed. How would you clean it?",
+   "keywords": [
+    "duplicates",
+    "trim",
+    "format",
+    "sort",
+    "filter",
+    "backup"
+   ],
+   "followUp": "What would you do before changing the original data?"
+  },
+  {
+   "id": "excel-e1",
+   "skill": "Excel",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used Excel for a report or a task. What did you make?",
+   "keywords": [
+    "report",
+    "formula",
+    "data",
+    "result",
+    "learned"
+   ],
+   "followUp": "What shortcut or function saved you the most time?"
+  },
+  {
+   "id": "data-analysis-c1",
+   "skill": "Data analysis",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between data and information?",
+   "keywords": [
+    "raw data",
+    "meaning",
+    "context",
+    "decision",
+    "summary"
+   ],
+   "followUp": "Can you give an example from a shop?"
+  },
+  {
+   "id": "data-analysis-c2",
+   "skill": "Data analysis",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what an outlier is and what you would do when you find one in your data.",
+   "keywords": [
+    "outlier",
+    "unusual",
+    "error",
+    "check",
+    "real",
+    "decide"
+   ],
+   "followUp": "How would you decide whether to remove it?"
+  },
+  {
+   "id": "data-analysis-a1",
+   "skill": "Data analysis",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Your manager asks which month had the best sales this year. How would you find out?",
+   "keywords": [
+    "collect",
+    "total by month",
+    "compare",
+    "chart",
+    "answer"
+   ],
+   "followUp": "How would you show it so it is easy to see?"
+  },
+  {
+   "id": "data-analysis-a2",
+   "skill": "Data analysis",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Customer complaints rose last month. How would you use data to find the reason?",
+   "keywords": [
+    "complaints",
+    "categories",
+    "time",
+    "compare",
+    "pattern",
+    "cause"
+   ],
+   "followUp": "Which other data would you ask for?"
+  },
+  {
+   "id": "data-analysis-e1",
+   "skill": "Data analysis",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you looked at data to answer a question. What did you find?",
+   "keywords": [
+    "question",
+    "data",
+    "method",
+    "finding",
+    "action"
+   ],
+   "followUp": "Did anyone act on your finding?"
+  },
+  {
+   "id": "data-visualization-power-bi-tableau-c1",
+   "skill": "Data visualization (Power BI/Tableau)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a dashboard, and who is it for?",
+   "keywords": [
+    "summary",
+    "key numbers",
+    "audience",
+    "decisions",
+    "one screen"
+   ],
+   "followUp": "What would a dashboard for a shop owner show?"
+  },
+  {
+   "id": "data-visualization-power-bi-tableau-c2",
+   "skill": "Data visualization (Power BI/Tableau)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain when you would use a line chart, a bar chart and a pie chart.",
+   "keywords": [
+    "line",
+    "trend",
+    "bar",
+    "compare",
+    "pie",
+    "parts of whole"
+   ],
+   "followUp": "Why do many experts avoid pie charts with many slices?"
+  },
+  {
+   "id": "data-visualization-power-bi-tableau-a1",
+   "skill": "Data visualization (Power BI/Tableau)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You have monthly sales for five cities. Which chart would you use to show which city sells the most, and why?",
+   "keywords": [
+    "bar",
+    "compare",
+    "sorted",
+    "labels",
+    "simple"
+   ],
+   "followUp": "How would you highlight the best city?"
+  },
+  {
+   "id": "data-visualization-power-bi-tableau-a2",
+   "skill": "Data visualization (Power BI/Tableau)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A manager says your dashboard is confusing. How would you improve it?",
+   "keywords": [
+    "ask",
+    "purpose",
+    "remove",
+    "clear titles",
+    "order",
+    "colours"
+   ],
+   "followUp": "How would you know the new version works better?"
+  },
+  {
+   "id": "data-visualization-power-bi-tableau-e1",
+   "skill": "Data visualization (Power BI/Tableau)",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you made a chart or a dashboard for other people. How did you decide what to show?",
+   "keywords": [
+    "audience",
+    "question",
+    "chart",
+    "feedback",
+    "result"
+   ],
+   "followUp": "What did you leave out, and why?"
+  },
+  {
+   "id": "statistics-c1",
+   "skill": "Statistics",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between mean, median and mode? When is the median better?",
+   "keywords": [
+    "average",
+    "middle",
+    "most common",
+    "outliers",
+    "skewed"
+   ],
+   "followUp": "Why is the median used for salaries?"
+  },
+  {
+   "id": "statistics-c2",
+   "skill": "Statistics",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a sample is and why a sample must be fair to give a good answer.",
+   "keywords": [
+    "sample",
+    "population",
+    "random",
+    "bias",
+    "size",
+    "represent"
+   ],
+   "followUp": "Can you give an example of an unfair sample?"
+  },
+  {
+   "id": "statistics-a1",
+   "skill": "Statistics",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A survey of fifty students shows that most like online classes. What would you check before telling the university?",
+   "keywords": [
+    "sample size",
+    "who answered",
+    "bias",
+    "question",
+    "limits"
+   ],
+   "followUp": "How would you word the result carefully?"
+  },
+  {
+   "id": "statistics-a2",
+   "skill": "Statistics",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Two sales campaigns show different averages. How would you decide if the difference is real or just luck?",
+   "keywords": [
+    "difference",
+    "variation",
+    "sample",
+    "test",
+    "confidence",
+    "more data"
+   ],
+   "followUp": "What would you tell a manager who wants a quick answer?"
+  },
+  {
+   "id": "statistics-e1",
+   "skill": "Statistics",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you used statistics in a project or a course. What did you learn from the numbers?",
+   "keywords": [
+    "data",
+    "method",
+    "result",
+    "meaning",
+    "limits"
+   ],
+   "followUp": "What would you do differently with more data?"
+  },
+  {
+   "id": "power-bi-c1",
+   "skill": "Power BI",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is Power BI and what can a business do with it?",
+   "keywords": [
+    "reports",
+    "dashboards",
+    "data",
+    "share",
+    "visuals",
+    "refresh"
+   ],
+   "followUp": "Who in a company would normally use these reports?"
+  },
+  {
+   "id": "power-bi-c2",
+   "skill": "Power BI",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between a measure and a column in Power BI in simple terms.",
+   "keywords": [
+    "column",
+    "row",
+    "measure",
+    "calculated",
+    "total",
+    "filter"
+   ],
+   "followUp": "When would you create a measure instead of a column?"
+  },
+  {
+   "id": "power-bi-a1",
+   "skill": "Power BI",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A retail company wants to see sales by city and by month. How would you build this in Power BI?",
+   "keywords": [
+    "import",
+    "clean",
+    "visuals",
+    "filter",
+    "slicer",
+    "city"
+   ],
+   "followUp": "What would a manager do with the slicers?"
+  },
+  {
+   "id": "power-bi-a2",
+   "skill": "Power BI",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your Power BI report loads slowly because the data is large. What would you try?",
+   "keywords": [
+    "reduce columns",
+    "filter",
+    "aggregate",
+    "model",
+    "refresh",
+    "remove unused"
+   ],
+   "followUp": "How would you check that the report is faster?"
+  },
+  {
+   "id": "power-bi-e1",
+   "skill": "Power BI",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used Power BI or another reporting tool. What was the result?",
+   "keywords": [
+    "report",
+    "data",
+    "visual",
+    "feedback",
+    "result"
+   ],
+   "followUp": "What would you add to it with more time?"
+  },
+  {
+   "id": "requirements-gathering-c1",
+   "skill": "Requirements gathering",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a requirement, and what is the difference between a business need and a solution?",
+   "keywords": [
+    "need",
+    "problem",
+    "solution",
+    "requirement",
+    "goal"
+   ],
+   "followUp": "Why is it risky to start with the solution?"
+  },
+  {
+   "id": "requirements-gathering-c2",
+   "skill": "Requirements gathering",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a user story and its acceptance criteria are.",
+   "keywords": [
+    "user story",
+    "as a",
+    "i want",
+    "so that",
+    "acceptance criteria",
+    "testable"
+   ],
+   "followUp": "What makes acceptance criteria good?"
+  },
+  {
+   "id": "requirements-gathering-a1",
+   "skill": "Requirements gathering",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A cafe owner in Karachi says, \"I want an app so customers can order.\" What questions would you ask first?",
+   "keywords": [
+    "why",
+    "who",
+    "goal",
+    "orders",
+    "payment",
+    "budget"
+   ],
+   "followUp": "Which question would you ask first and why?"
+  },
+  {
+   "id": "requirements-gathering-a2",
+   "skill": "Requirements gathering",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Two departments give you requirements that clash. How would you handle it?",
+   "keywords": [
+    "compare",
+    "meeting",
+    "priority",
+    "impact",
+    "decision",
+    "document"
+   ],
+   "followUp": "Who has the final say, and how would you involve them?"
+  },
+  {
+   "id": "requirements-gathering-e1",
+   "skill": "Requirements gathering",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you had to find out what someone really needed. How did you do it?",
+   "keywords": [
+    "asked",
+    "listened",
+    "examples",
+    "confirmed",
+    "result"
+   ],
+   "followUp": "How did you check that you understood correctly?"
+  },
+  {
+   "id": "documentation-c1",
+   "skill": "Documentation",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "Why do teams write documentation, and what happens when they do not?",
+   "keywords": [
+    "knowledge",
+    "handover",
+    "mistakes",
+    "time",
+    "new joiners"
+   ],
+   "followUp": "Who is the first reader of your document?"
+  },
+  {
+   "id": "documentation-c2",
+   "skill": "Documentation",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between a process document and a user guide.",
+   "keywords": [
+    "process",
+    "steps",
+    "users",
+    "audience",
+    "purpose",
+    "detail"
+   ],
+   "followUp": "How would the writing style change between them?"
+  },
+  {
+   "id": "documentation-a1",
+   "skill": "Documentation",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new colleague joins next week. How would you document the process for handling a customer refund?",
+   "keywords": [
+    "steps",
+    "roles",
+    "flow",
+    "example",
+    "screenshots",
+    "simple"
+   ],
+   "followUp": "How would you test that the document is clear?"
+  },
+  {
+   "id": "documentation-a2",
+   "skill": "Documentation",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your team's documents are old and nobody trusts them. How would you fix this?",
+   "keywords": [
+    "review",
+    "owner",
+    "date",
+    "remove",
+    "update",
+    "habit"
+   ],
+   "followUp": "How would you keep them fresh in the future?"
+  },
+  {
+   "id": "documentation-e1",
+   "skill": "Documentation",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you wrote a report, guide or notes that others used. What was the result?",
+   "keywords": [
+    "audience",
+    "structure",
+    "feedback",
+    "used",
+    "result"
+   ],
+   "followUp": "What would you improve in it?"
+  },
+  {
+   "id": "stakeholder-management-c1",
+   "skill": "Stakeholder management",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "Who is a stakeholder in a project? Give some examples.",
+   "keywords": [
+    "interest",
+    "affected",
+    "client",
+    "manager",
+    "users",
+    "team"
+   ],
+   "followUp": "Who is the most important stakeholder, and why?"
+  },
+  {
+   "id": "stakeholder-management-c2",
+   "skill": "Stakeholder management",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain how a stakeholder map helps you decide how much attention each person needs.",
+   "keywords": [
+    "influence",
+    "interest",
+    "high",
+    "low",
+    "plan",
+    "communication"
+   ],
+   "followUp": "What would you do with someone who has high influence but low interest?"
+  },
+  {
+   "id": "stakeholder-management-a1",
+   "skill": "Stakeholder management",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You are a coordinator on a school fundraising event and the principal wants daily updates. How would you give them?",
+   "keywords": [
+    "short",
+    "regular",
+    "progress",
+    "problems",
+    "format",
+    "simple"
+   ],
+   "followUp": "How would you keep it short enough to read?"
+  },
+  {
+   "id": "stakeholder-management-a2",
+   "skill": "Stakeholder management",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A sponsor is unhappy because the project is two weeks late. How would you speak to them?",
+   "keywords": [
+    "honest",
+    "reason",
+    "plan",
+    "options",
+    "ownership",
+    "follow up"
+   ],
+   "followUp": "What would you prepare before the meeting?"
+  },
+  {
+   "id": "stakeholder-management-e1",
+   "skill": "Stakeholder management",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you had to work with someone who was difficult or demanding. What did you do?",
+   "keywords": [
+    "expectations",
+    "listened",
+    "communicated",
+    "solution",
+    "result"
+   ],
+   "followUp": "What did you learn about handling such people?"
+  },
+  {
+   "id": "project-planning-c1",
+   "skill": "Project planning",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a task, a milestone and a deadline in a project?",
+   "keywords": [
+    "task",
+    "milestone",
+    "deadline",
+    "progress",
+    "checkpoint"
+   ],
+   "followUp": "Why are milestones useful for a manager?"
+  },
+  {
+   "id": "project-planning-c2",
+   "skill": "Project planning",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what dependencies and the critical path mean in a project plan.",
+   "keywords": [
+    "dependency",
+    "before",
+    "critical path",
+    "delay",
+    "longest",
+    "order"
+   ],
+   "followUp": "What happens if a task on the critical path is late?"
+  },
+  {
+   "id": "project-planning-a1",
+   "skill": "Project planning",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Your university society is organising an annual dinner. How would you plan the work from now until the event?",
+   "keywords": [
+    "goal",
+    "tasks",
+    "owners",
+    "dates",
+    "budget",
+    "checklist"
+   ],
+   "followUp": "What would you do in the first week?"
+  },
+  {
+   "id": "project-planning-a2",
+   "skill": "Project planning",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You are halfway through a project and the client adds a new request. What do you do?",
+   "keywords": [
+    "scope",
+    "impact",
+    "time",
+    "cost",
+    "agree",
+    "change request"
+   ],
+   "followUp": "How do you say no politely when needed?"
+  },
+  {
+   "id": "project-planning-e1",
+   "skill": "Project planning",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you planned a project, event or assignment. How did you organise it?",
+   "keywords": [
+    "plan",
+    "tasks",
+    "deadline",
+    "team",
+    "result"
+   ],
+   "followUp": "What went differently from the plan?"
+  },
+  {
+   "id": "time-management-s1",
+   "skill": "Time management",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Think of your busiest exam week or project week. What plan did you make for your days, and did it work?",
+   "keywords": [
+    "situation",
+    "plan",
+    "schedule",
+    "priority",
+    "result"
+   ],
+   "followUp": "What part of the plan would you change today?"
+  },
+  {
+   "id": "time-management-s2",
+   "skill": "Time management",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Describe a time you had too much work and had to say no or ask for help.",
+   "keywords": [
+    "workload",
+    "told",
+    "options",
+    "agreed",
+    "result"
+   ],
+   "followUp": "How did your manager or teacher react?"
+  },
+  {
+   "id": "time-management-s3",
+   "skill": "Time management",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you were late with something. What did you do about it?",
+   "keywords": [
+    "late",
+    "reason",
+    "informed",
+    "recovered",
+    "learned"
+   ],
+   "followUp": "How do you now avoid the same delay?"
+  },
+  {
+   "id": "time-management-s4",
+   "skill": "Time management",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Give an example of how you planned your time during exam season or a heavy project.",
+   "keywords": [
+    "plan",
+    "schedule",
+    "priority",
+    "breaks",
+    "result"
+   ],
+   "followUp": "What part of the plan did not work?"
+  },
+  {
+   "id": "time-management-s5",
+   "skill": "Time management",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Describe a time you were distracted or put things off. How did you get back on track?",
+   "keywords": [
+    "distraction",
+    "realised",
+    "changed",
+    "routine",
+    "result"
+   ],
+   "followUp": "Which habit helps you most today?"
+  },
+  {
+   "id": "time-management-s6",
+   "skill": "Time management",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Tell me about a time you had to choose between two urgent tasks. How did you decide?",
+   "keywords": [
+    "urgent",
+    "important",
+    "impact",
+    "decision",
+    "communicated"
+   ],
+   "followUp": "Would you make the same choice again?"
+  },
+  {
+   "id": "teamwork-s1",
+   "skill": "Teamwork",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a team project you are proud of. What was your role and what did the team achieve?",
+   "keywords": [
+    "situation",
+    "role",
+    "contribution",
+    "team",
+    "result"
+   ],
+   "followUp": "What did you learn from your teammates?"
+  },
+  {
+   "id": "teamwork-s2",
+   "skill": "Teamwork",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Tell me about a time your team argued about how to do a task. What part did you play in settling it?",
+   "keywords": [
+    "situation",
+    "listened",
+    "options",
+    "agreed",
+    "result"
+   ],
+   "followUp": "How did the team work together after that?"
+  },
+  {
+   "id": "teamwork-s3",
+   "skill": "Teamwork",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time a teammate was not doing their share. What did you do?",
+   "keywords": [
+    "problem",
+    "spoke",
+    "support",
+    "agreed",
+    "result"
+   ],
+   "followUp": "How did it change the way you work in teams?"
+  },
+  {
+   "id": "teamwork-s4",
+   "skill": "Teamwork",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Describe a time you helped a teammate who was struggling.",
+   "keywords": [
+    "noticed",
+    "offered",
+    "helped",
+    "result",
+    "team"
+   ],
+   "followUp": "How did you balance this with your own work?"
+  },
+  {
+   "id": "teamwork-s5",
+   "skill": "Teamwork",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you worked with people very different from you.",
+   "keywords": [
+    "differences",
+    "respect",
+    "communication",
+    "shared goal",
+    "result"
+   ],
+   "followUp": "What did you learn from them?"
+  },
+  {
+   "id": "teamwork-s6",
+   "skill": "Teamwork",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Give an example of when you put the team's goal before your own preference.",
+   "keywords": [
+    "preference",
+    "goal",
+    "decision",
+    "result",
+    "feeling"
+   ],
+   "followUp": "How did the team react?"
+  },
+  {
+   "id": "jira-trello-c1",
+   "skill": "Jira/Trello",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a task board, and what do the columns To Do, In Progress and Done mean?",
+   "keywords": [
+    "board",
+    "columns",
+    "status",
+    "progress",
+    "visible"
+   ],
+   "followUp": "Why does the team need to move cards often?"
+  },
+  {
+   "id": "jira-trello-c2",
+   "skill": "Jira/Trello",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between an epic, a story and a task in a tool like Jira.",
+   "keywords": [
+    "epic",
+    "story",
+    "task",
+    "big",
+    "small",
+    "breakdown"
+   ],
+   "followUp": "Why is it better to break big work into small tasks?"
+  },
+  {
+   "id": "jira-trello-a1",
+   "skill": "Jira/Trello",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You manage a small team of four students building a final-year project. How would you set up a Trello board?",
+   "keywords": [
+    "columns",
+    "cards",
+    "assign",
+    "deadline",
+    "labels",
+    "checklist"
+   ],
+   "followUp": "What would you put on each card?"
+  },
+  {
+   "id": "jira-trello-a2",
+   "skill": "Jira/Trello",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "The team board is full of old cards and nobody knows what is current. How would you clean it up?",
+   "keywords": [
+    "review",
+    "archive",
+    "owner",
+    "rules",
+    "meeting",
+    "status"
+   ],
+   "followUp": "How would you keep it clean in the future?"
+  },
+  {
+   "id": "jira-trello-e1",
+   "skill": "Jira/Trello",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used a task board or a to-do tool to organise work. How did it help?",
+   "keywords": [
+    "tool",
+    "tasks",
+    "progress",
+    "team",
+    "result"
+   ],
+   "followUp": "What did not work well in that setup?"
+  },
+  {
+   "id": "risk-management-c1",
+   "skill": "Risk management",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a risk in a project, and how is it different from an issue?",
+   "keywords": [
+    "risk",
+    "might happen",
+    "issue",
+    "already",
+    "impact"
+   ],
+   "followUp": "Can you give an example of each?"
+  },
+  {
+   "id": "risk-management-c2",
+   "skill": "Risk management",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a risk register is and what columns it should have.",
+   "keywords": [
+    "register",
+    "risk",
+    "likelihood",
+    "impact",
+    "owner",
+    "action"
+   ],
+   "followUp": "Who should review the register, and how often?"
+  },
+  {
+   "id": "risk-management-a1",
+   "skill": "Risk management",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You are organising a university seminar outdoors in summer. What risks would you plan for?",
+   "keywords": [
+    "weather",
+    "attendance",
+    "speaker",
+    "equipment",
+    "backup",
+    "plan"
+   ],
+   "followUp": "Which risk is the most serious?"
+  },
+  {
+   "id": "risk-management-a2",
+   "skill": "Risk management",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A key supplier tells you they will deliver one week late. What do you do?",
+   "keywords": [
+    "impact",
+    "options",
+    "inform",
+    "alternative",
+    "plan",
+    "escalate"
+   ],
+   "followUp": "How would you reduce this risk in the next project?"
+  },
+  {
+   "id": "risk-management-e1",
+   "skill": "Risk management",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time something went wrong in an event or project and you had a backup plan, or wished you had one.",
+   "keywords": [
+    "problem",
+    "plan",
+    "backup",
+    "result",
+    "learned"
+   ],
+   "followUp": "What would you plan differently now?"
+  },
+  {
+   "id": "negotiation-c1",
+   "skill": "Negotiation",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What does win-win mean in a negotiation?",
+   "keywords": [
+    "both sides",
+    "needs",
+    "agreement",
+    "value",
+    "relationship"
+   ],
+   "followUp": "Is a win-win always possible, or are there deals where it is not?"
+  },
+  {
+   "id": "negotiation-c2",
+   "skill": "Negotiation",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a BATNA or walk-away point is and why you should know yours before you negotiate.",
+   "keywords": [
+    "alternative",
+    "limit",
+    "prepare",
+    "power",
+    "decision"
+   ],
+   "followUp": "How do you find out the other side's limit?"
+  },
+  {
+   "id": "negotiation-a1",
+   "skill": "Negotiation",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A client in Lahore asks for a ten percent discount on a first order. How would you reply?",
+   "keywords": [
+    "listen",
+    "value",
+    "options",
+    "trade",
+    "limit",
+    "polite"
+   ],
+   "followUp": "What would you ask for in return?"
+  },
+  {
+   "id": "negotiation-a2",
+   "skill": "Negotiation",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A customer says a competitor is cheaper by a small amount. How would you keep the deal?",
+   "keywords": [
+    "value",
+    "difference",
+    "service",
+    "quality",
+    "relationship",
+    "listen"
+   ],
+   "followUp": "At what point would you let the customer go?"
+  },
+  {
+   "id": "negotiation-e1",
+   "skill": "Negotiation",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you had to persuade or negotiate with someone. What was the outcome?",
+   "keywords": [
+    "goal",
+    "preparation",
+    "listened",
+    "agreement",
+    "result"
+   ],
+   "followUp": "What would you do differently next time?"
+  },
+  {
+   "id": "customer-service-c1",
+   "skill": "Customer service",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What does good customer service mean to you?",
+   "keywords": [
+    "listen",
+    "respect",
+    "solve",
+    "quick",
+    "polite",
+    "follow up"
+   ],
+   "followUp": "What is the first thing you do when a customer contacts you?"
+  },
+  {
+   "id": "customer-service-c2",
+   "skill": "Customer service",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain why following up after solving a problem matters.",
+   "keywords": [
+    "trust",
+    "check",
+    "satisfied",
+    "repeat customer",
+    "feedback"
+   ],
+   "followUp": "What do you say in the follow-up message?"
+  },
+  {
+   "id": "customer-service-a1",
+   "skill": "Customer service",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A customer calls because their parcel from your online shop is five days late. What would you say and do?",
+   "keywords": [
+    "apologise",
+    "listen",
+    "check",
+    "update",
+    "timeline",
+    "follow up"
+   ],
+   "followUp": "What if you cannot find the parcel?"
+  },
+  {
+   "id": "customer-service-a2",
+   "skill": "Customer service",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A customer is shouting and demands a full refund, but the shop policy does not allow it. What do you do?",
+   "keywords": [
+    "calm",
+    "empathy",
+    "policy",
+    "options",
+    "escalate",
+    "respect"
+   ],
+   "followUp": "How do you protect your own calm in such a call?"
+  },
+  {
+   "id": "customer-service-e1",
+   "skill": "Customer service",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you helped someone with a problem or complaint. How did it end?",
+   "keywords": [
+    "situation",
+    "listened",
+    "solution",
+    "result",
+    "feedback"
+   ],
+   "followUp": "What did the person say at the end?"
+  },
+  {
+   "id": "crm-c1",
+   "skill": "CRM",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a CRM, and what kind of information does it store?",
+   "keywords": [
+    "customers",
+    "contacts",
+    "history",
+    "sales",
+    "notes",
+    "follow-up"
+   ],
+   "followUp": "Why is it better than a notebook or a personal sheet?"
+  },
+  {
+   "id": "crm-c2",
+   "skill": "CRM",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a sales pipeline is and what stages it usually has.",
+   "keywords": [
+    "lead",
+    "qualified",
+    "proposal",
+    "negotiation",
+    "won",
+    "lost"
+   ],
+   "followUp": "Why does the team track the stage of each deal?"
+  },
+  {
+   "id": "crm-a1",
+   "skill": "CRM",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You just finished a call with a new lead from a trade fair. What would you record in the CRM?",
+   "keywords": [
+    "name",
+    "company",
+    "need",
+    "next step",
+    "date",
+    "notes"
+   ],
+   "followUp": "How soon should you record it, and why?"
+  },
+  {
+   "id": "crm-a2",
+   "skill": "CRM",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You find that many records in the CRM have missing phone numbers or duplicates. How would you fix this and keep it clean?",
+   "keywords": [
+    "duplicates",
+    "merge",
+    "required fields",
+    "rules",
+    "training",
+    "check"
+   ],
+   "followUp": "Who should be responsible for the quality of the data?"
+  },
+  {
+   "id": "crm-e1",
+   "skill": "CRM",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you tracked customers or leads, in a tool or by hand. How did you do it?",
+   "keywords": [
+    "tracking",
+    "list",
+    "follow up",
+    "result",
+    "learned"
+   ],
+   "followUp": "What did you miss, and how did you improve?"
+  },
+  {
+   "id": "social-media-marketing-c1",
+   "skill": "Social media marketing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between reach, impressions and engagement on a social media post?",
+   "keywords": [
+    "reach",
+    "impressions",
+    "engagement",
+    "likes",
+    "comments",
+    "shares"
+   ],
+   "followUp": "Which one matters most for a small shop?"
+  },
+  {
+   "id": "social-media-marketing-c2",
+   "skill": "Social media marketing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain why different platforms such as Instagram, Facebook and LinkedIn need different content.",
+   "keywords": [
+    "audience",
+    "format",
+    "tone",
+    "platform",
+    "purpose"
+   ],
+   "followUp": "Which platform would you choose for a bakery, and why?"
+  },
+  {
+   "id": "social-media-marketing-a1",
+   "skill": "Social media marketing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new home bakery in Islamabad wants more followers. What would you post in the first month?",
+   "keywords": [
+    "photos",
+    "reels",
+    "behind the scenes",
+    "offers",
+    "consistency",
+    "hashtags"
+   ],
+   "followUp": "How often would you post?"
+  },
+  {
+   "id": "social-media-marketing-a2",
+   "skill": "Social media marketing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your brand's post gets many views but very few comments or orders. What would you change?",
+   "keywords": [
+    "audience",
+    "message",
+    "call to action",
+    "content",
+    "test",
+    "engagement"
+   ],
+   "followUp": "How would you test your idea?"
+  },
+  {
+   "id": "social-media-marketing-e1",
+   "skill": "Social media marketing",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you managed or grew a social media page. What worked?",
+   "keywords": [
+    "page",
+    "content",
+    "followers",
+    "result",
+    "learned"
+   ],
+   "followUp": "What was your best post and why?"
+  },
+  {
+   "id": "paid-ads-meta-google-c1",
+   "skill": "Paid ads (Meta/Google)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a Meta ad and a Google search ad?",
+   "keywords": [
+    "social",
+    "feed",
+    "search",
+    "intent",
+    "interest",
+    "audience"
+   ],
+   "followUp": "Which would you choose for a product people search for?"
+  },
+  {
+   "id": "paid-ads-meta-google-c2",
+   "skill": "Paid ads (Meta/Google)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain CPC, CTR and conversion rate, and how they relate.",
+   "keywords": [
+    "cost per click",
+    "click through rate",
+    "conversion",
+    "sales",
+    "budget",
+    "relate"
+   ],
+   "followUp": "Which of the three matters most to the owner?"
+  },
+  {
+   "id": "paid-ads-meta-google-a1",
+   "skill": "Paid ads (Meta/Google)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A small clothing brand has a monthly budget of twenty thousand rupees for ads. How would you spend it?",
+   "keywords": [
+    "goal",
+    "audience",
+    "split",
+    "test",
+    "budget",
+    "monitor"
+   ],
+   "followUp": "How would you decide which ad to stop?"
+  },
+  {
+   "id": "paid-ads-meta-google-a2",
+   "skill": "Paid ads (Meta/Google)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your ad is shown a lot but nobody buys. What would you check?",
+   "keywords": [
+    "audience",
+    "creative",
+    "landing page",
+    "offer",
+    "price",
+    "tracking"
+   ],
+   "followUp": "Which one would you change first?"
+  },
+  {
+   "id": "paid-ads-meta-google-e1",
+   "skill": "Paid ads (Meta/Google)",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you ran or studied an online ad campaign. What did you learn about what works?",
+   "keywords": [
+    "campaign",
+    "audience",
+    "results",
+    "changes",
+    "learned"
+   ],
+   "followUp": "What would you test next?"
+  },
+  {
+   "id": "marketing-analytics-c1",
+   "skill": "Marketing analytics",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a KPI, and why does a campaign need one?",
+   "keywords": [
+    "goal",
+    "measure",
+    "target",
+    "track",
+    "success"
+   ],
+   "followUp": "What KPI would you set for a campaign that wants more orders?"
+  },
+  {
+   "id": "marketing-analytics-c2",
+   "skill": "Marketing analytics",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a UTM tag is and why a marketer adds it to links.",
+   "keywords": [
+    "link",
+    "source",
+    "campaign",
+    "track",
+    "analytics",
+    "compare"
+   ],
+   "followUp": "How would you read the result in your reports?"
+  },
+  {
+   "id": "marketing-analytics-a1",
+   "skill": "Marketing analytics",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Your company ran a Eid sale campaign on Facebook and Instagram. How would you show which one worked better?",
+   "keywords": [
+    "compare",
+    "sales",
+    "cost",
+    "source",
+    "report",
+    "period"
+   ],
+   "followUp": "What if the numbers are close?"
+  },
+  {
+   "id": "marketing-analytics-a2",
+   "skill": "Marketing analytics",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Website visitors increased but sales did not. How would you use analytics to find out why?",
+   "keywords": [
+    "funnel",
+    "drop off",
+    "pages",
+    "device",
+    "source",
+    "bounce"
+   ],
+   "followUp": "Which report would you open first?"
+  },
+  {
+   "id": "marketing-analytics-e1",
+   "skill": "Marketing analytics",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used numbers or analytics to make a decision.",
+   "keywords": [
+    "data",
+    "metric",
+    "decision",
+    "result",
+    "learned"
+   ],
+   "followUp": "What did the data surprise you with?"
+  },
+  {
+   "id": "content-planning-c1",
+   "skill": "Content planning",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a content calendar, and why is it useful?",
+   "keywords": [
+    "schedule",
+    "topics",
+    "dates",
+    "consistent",
+    "team"
+   ],
+   "followUp": "What does one entry in the calendar include?"
+  },
+  {
+   "id": "content-planning-c2",
+   "skill": "Content planning",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain content pillars and how they help plan what to post.",
+   "keywords": [
+    "pillars",
+    "themes",
+    "balance",
+    "audience",
+    "variety"
+   ],
+   "followUp": "What pillars would a fitness gym use?"
+  },
+  {
+   "id": "content-planning-a1",
+   "skill": "Content planning",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A coaching centre wants a plan for the next four weeks on Instagram. How would you build it?",
+   "keywords": [
+    "goal",
+    "themes",
+    "weekly",
+    "formats",
+    "dates",
+    "review"
+   ],
+   "followUp": "How do you make room for exam-season posts?"
+  },
+  {
+   "id": "content-planning-a2",
+   "skill": "Content planning",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You realise half of your planned posts did not get any response. How would you change the plan?",
+   "keywords": [
+    "review",
+    "data",
+    "best",
+    "drop",
+    "test",
+    "audience"
+   ],
+   "followUp": "How often should you review the plan?"
+  },
+  {
+   "id": "content-planning-e1",
+   "skill": "Content planning",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you planned posts, articles or content ahead of time. How did it help?",
+   "keywords": [
+    "plan",
+    "schedule",
+    "consistent",
+    "result",
+    "learned"
+   ],
+   "followUp": "What did you do when plans suddenly changed?"
+  },
+  {
+   "id": "seo-c1",
+   "skill": "SEO",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What does SEO mean, and why does a business care about it?",
+   "keywords": [
+    "search",
+    "ranking",
+    "traffic",
+    "free",
+    "visibility"
+   ],
+   "followUp": "How is SEO different from paid ads?"
+  },
+  {
+   "id": "seo-c2",
+   "skill": "SEO",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between on-page and off-page SEO.",
+   "keywords": [
+    "content",
+    "title",
+    "headings",
+    "backlinks",
+    "authority",
+    "outside"
+   ],
+   "followUp": "Which one is easier to control?"
+  },
+  {
+   "id": "seo-a1",
+   "skill": "SEO",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new shop in Faisalabad has a website but it does not appear on Google. What would you check first?",
+   "keywords": [
+    "indexed",
+    "search console",
+    "title",
+    "content",
+    "keywords",
+    "speed"
+   ],
+   "followUp": "What would you do next?"
+  },
+  {
+   "id": "seo-a2",
+   "skill": "SEO",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your blog post ranks on page three. How would you try to move it up?",
+   "keywords": [
+    "keyword",
+    "content quality",
+    "title",
+    "links",
+    "intent",
+    "update"
+   ],
+   "followUp": "How long do you wait before judging the result?"
+  },
+  {
+   "id": "seo-e1",
+   "skill": "SEO",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you worked on SEO or helped a page get more visitors.",
+   "keywords": [
+    "page",
+    "keyword",
+    "changes",
+    "traffic",
+    "learned"
+   ],
+   "followUp": "What did you measure to prove it worked?"
+  },
+  {
+   "id": "canva-c1",
+   "skill": "Canva",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What are Canva templates, and what are the benefits and risks of using them?",
+   "keywords": [
+    "templates",
+    "fast",
+    "ready",
+    "original",
+    "brand",
+    "similar"
+   ],
+   "followUp": "How do you make a template look like your own brand?"
+  },
+  {
+   "id": "canva-c2",
+   "skill": "Canva",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a brand kit is and why a company should use one in its designs.",
+   "keywords": [
+    "logo",
+    "colours",
+    "fonts",
+    "consistent",
+    "recognition",
+    "kit"
+   ],
+   "followUp": "What goes in a brand kit?"
+  },
+  {
+   "id": "canva-a1",
+   "skill": "Canva",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You must design a Facebook post for a Ramzan discount offer. How would you do it in Canva?",
+   "keywords": [
+    "size",
+    "template",
+    "text",
+    "image",
+    "colours",
+    "contrast"
+   ],
+   "followUp": "How would you check it is readable on a phone?"
+  },
+  {
+   "id": "canva-a2",
+   "skill": "Canva",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your team's social posts look different every week. How would you make them consistent?",
+   "keywords": [
+    "brand kit",
+    "templates",
+    "fonts",
+    "colours",
+    "guidelines",
+    "share"
+   ],
+   "followUp": "How would you keep new team members following it?"
+  },
+  {
+   "id": "canva-e1",
+   "skill": "Canva",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a design you made in Canva. Who was it for and how did it turn out?",
+   "keywords": [
+    "design",
+    "purpose",
+    "audience",
+    "feedback",
+    "result"
+   ],
+   "followUp": "What would you change if you made it again?"
+  },
+  {
+   "id": "content-writing-c1",
+   "skill": "Content writing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What makes a headline good?",
+   "keywords": [
+    "clear",
+    "specific",
+    "benefit",
+    "short",
+    "curiosity",
+    "honest"
+   ],
+   "followUp": "Can you give a good headline and a bad headline on the same topic?"
+  },
+  {
+   "id": "content-writing-c2",
+   "skill": "Content writing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between writing for the web and writing for a printed magazine.",
+   "keywords": [
+    "scan",
+    "short paragraphs",
+    "headings",
+    "keywords",
+    "skim",
+    "digital"
+   ],
+   "followUp": "Why do readers skim web pages?"
+  },
+  {
+   "id": "content-writing-a1",
+   "skill": "Content writing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A local tuition academy wants a blog post for parents about exam stress. How would you structure it?",
+   "keywords": [
+    "audience",
+    "headline",
+    "intro",
+    "sections",
+    "tips",
+    "call to action"
+   ],
+   "followUp": "What tone would you use?"
+  },
+  {
+   "id": "content-writing-a2",
+   "skill": "Content writing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A client asks you to write a product description for a handmade leather wallet. How would you do it?",
+   "keywords": [
+    "features",
+    "benefits",
+    "audience",
+    "tone",
+    "detail",
+    "call to action"
+   ],
+   "followUp": "How would you avoid sounding like every other page?"
+  },
+  {
+   "id": "content-writing-e1",
+   "skill": "Content writing",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about an article, blog post or text you wrote. How did you research and edit it?",
+   "keywords": [
+    "topic",
+    "research",
+    "draft",
+    "edit",
+    "feedback",
+    "result"
+   ],
+   "followUp": "What feedback did you get?"
+  },
+  {
+   "id": "keyword-research-c1",
+   "skill": "Keyword research",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a keyword, and what is search intent?",
+   "keywords": [
+    "search term",
+    "intent",
+    "buy",
+    "learn",
+    "match"
+   ],
+   "followUp": "Why does intent matter more than just volume?"
+  },
+  {
+   "id": "keyword-research-c2",
+   "skill": "Keyword research",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what long-tail keywords are and why they can be easier to rank for.",
+   "keywords": [
+    "long",
+    "specific",
+    "low competition",
+    "conversion",
+    "niche"
+   ],
+   "followUp": "Can you give an example for a shoe shop?"
+  },
+  {
+   "id": "keyword-research-a1",
+   "skill": "Keyword research",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new online store sells school bags in Pakistan. How would you find the words people search for?",
+   "keywords": [
+    "tools",
+    "suggestions",
+    "competitors",
+    "volume",
+    "relevance",
+    "list"
+   ],
+   "followUp": "How would you pick the first five?"
+  },
+  {
+   "id": "keyword-research-a2",
+   "skill": "Keyword research",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Two keywords: one has a high search volume but is very competitive, and the other is smaller but exact. Which would you target first?",
+   "keywords": [
+    "difficulty",
+    "volume",
+    "intent",
+    "new site",
+    "conversion",
+    "ranking"
+   ],
+   "followUp": "When would you change your decision?"
+  },
+  {
+   "id": "keyword-research-e1",
+   "skill": "Keyword research",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you researched what people search for or what they want. What did you find?",
+   "keywords": [
+    "research",
+    "tool",
+    "findings",
+    "used",
+    "result"
+   ],
+   "followUp": "How did you decide which result to trust?"
+  },
+  {
+   "id": "editing-c1",
+   "skill": "Editing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between proofreading and editing?",
+   "keywords": [
+    "proofreading",
+    "errors",
+    "editing",
+    "structure",
+    "clarity",
+    "stage"
+   ],
+   "followUp": "Which comes first?"
+  },
+  {
+   "id": "editing-c2",
+   "skill": "Editing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a style guide is and why an editor uses one.",
+   "keywords": [
+    "rules",
+    "consistent",
+    "tone",
+    "spelling",
+    "format",
+    "brand"
+   ],
+   "followUp": "What would you include for a Pakistani audience writing in English?"
+  },
+  {
+   "id": "editing-a1",
+   "skill": "Editing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A writer gives you an article that is correct but boring and too long. What do you do?",
+   "keywords": [
+    "cut",
+    "structure",
+    "clear",
+    "examples",
+    "tone",
+    "feedback"
+   ],
+   "followUp": "How would you tell the writer about your changes?"
+  },
+  {
+   "id": "editing-a2",
+   "skill": "Editing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You find a statistic in an article and you are not sure it is true. What would you do before publishing?",
+   "keywords": [
+    "source",
+    "check",
+    "date",
+    "second source",
+    "ask",
+    "remove"
+   ],
+   "followUp": "What if you cannot find a source?"
+  },
+  {
+   "id": "editing-e1",
+   "skill": "Editing",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you edited or reviewed someone else's work. How did you give feedback?",
+   "keywords": [
+    "reviewed",
+    "mistakes",
+    "feedback",
+    "respect",
+    "result"
+   ],
+   "followUp": "How did the person react?"
+  },
+  {
+   "id": "wordpress-c1",
+   "skill": "WordPress",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a CMS, and why do many businesses use WordPress?",
+   "keywords": [
+    "content management",
+    "no code",
+    "themes",
+    "plugins",
+    "easy",
+    "update"
+   ],
+   "followUp": "What are the limits of using it?"
+  },
+  {
+   "id": "wordpress-c2",
+   "skill": "WordPress",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between a post and a page in WordPress.",
+   "keywords": [
+    "post",
+    "page",
+    "blog",
+    "static",
+    "date",
+    "categories"
+   ],
+   "followUp": "Where would you put an About Us text?"
+  },
+  {
+   "id": "wordpress-a1",
+   "skill": "WordPress",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You need to publish a new blog post with images. What steps would you follow in WordPress?",
+   "keywords": [
+    "title",
+    "content",
+    "images",
+    "alt text",
+    "category",
+    "preview"
+   ],
+   "followUp": "What do you check before clicking publish?"
+  },
+  {
+   "id": "wordpress-a2",
+   "skill": "WordPress",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "After you installed a new plugin, the website became slow. What would you do?",
+   "keywords": [
+    "deactivate",
+    "test",
+    "speed",
+    "backup",
+    "compare",
+    "alternative"
+   ],
+   "followUp": "What would you do before installing any plugin?"
+  },
+  {
+   "id": "wordpress-e1",
+   "skill": "WordPress",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used WordPress or any website builder. What did you build?",
+   "keywords": [
+    "site",
+    "theme",
+    "plugins",
+    "pages",
+    "result"
+   ],
+   "followUp": "What was difficult for you?"
+  },
+  {
+   "id": "market-research-c1",
+   "skill": "Market research",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between primary research and secondary research?",
+   "keywords": [
+    "primary",
+    "own data",
+    "secondary",
+    "existing",
+    "survey",
+    "reports"
+   ],
+   "followUp": "Which is cheaper, and which is more specific?"
+  },
+  {
+   "id": "market-research-c2",
+   "skill": "Market research",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a SWOT analysis is and how it helps a business.",
+   "keywords": [
+    "strengths",
+    "weaknesses",
+    "opportunities",
+    "threats",
+    "decision",
+    "internal"
+   ],
+   "followUp": "Which part is outside the company's control?"
+  },
+  {
+   "id": "market-research-a1",
+   "skill": "Market research",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A friend wants to open a juice shop near a university in Rawalpindi. How would you research the market?",
+   "keywords": [
+    "customers",
+    "competitors",
+    "prices",
+    "location",
+    "survey",
+    "visit"
+   ],
+   "followUp": "Which question would you ask students?"
+  },
+  {
+   "id": "market-research-a2",
+   "skill": "Market research",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You find that a competitor is selling the same product at a lower price. What would you tell your manager?",
+   "keywords": [
+    "data",
+    "price",
+    "value",
+    "position",
+    "options",
+    "risk"
+   ],
+   "followUp": "What other facts would you check before suggesting a price cut?"
+  },
+  {
+   "id": "market-research-e1",
+   "skill": "Market research",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you researched a market, product or competitor. What did you find?",
+   "keywords": [
+    "research",
+    "sources",
+    "findings",
+    "recommendation",
+    "result"
+   ],
+   "followUp": "How did you present it?"
+  },
+  {
+   "id": "campaign-planning-c1",
+   "skill": "Campaign planning",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What are the main parts of a marketing campaign plan?",
+   "keywords": [
+    "goal",
+    "audience",
+    "message",
+    "channels",
+    "budget",
+    "timeline"
+   ],
+   "followUp": "Which part do you decide first?"
+  },
+  {
+   "id": "campaign-planning-c2",
+   "skill": "Campaign planning",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between awareness, consideration and conversion in a campaign.",
+   "keywords": [
+    "awareness",
+    "consideration",
+    "conversion",
+    "stages",
+    "message",
+    "funnel"
+   ],
+   "followUp": "What message suits each stage?"
+  },
+  {
+   "id": "campaign-planning-a1",
+   "skill": "Campaign planning",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A local shoe brand wants to launch a new product before Eid. How would you plan the campaign?",
+   "keywords": [
+    "goal",
+    "audience",
+    "message",
+    "channels",
+    "timeline",
+    "budget"
+   ],
+   "followUp": "What would be your first step?"
+  },
+  {
+   "id": "campaign-planning-a2",
+   "skill": "Campaign planning",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Halfway through the campaign, results are below target. What would you do?",
+   "keywords": [
+    "review",
+    "data",
+    "problem",
+    "change",
+    "test",
+    "report"
+   ],
+   "followUp": "How would you tell your manager?"
+  },
+  {
+   "id": "campaign-planning-e1",
+   "skill": "Campaign planning",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you helped plan or run a campaign, event or promotion. What was your part?",
+   "keywords": [
+    "plan",
+    "role",
+    "audience",
+    "result",
+    "learned"
+   ],
+   "followUp": "What would you do differently next time?"
+  },
+  {
+   "id": "recruitment-c1",
+   "skill": "Recruitment",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What are the main steps of the recruitment process, from a job request to a new employee joining?",
+   "keywords": [
+    "vacancy",
+    "job description",
+    "sourcing",
+    "screening",
+    "interview",
+    "offer"
+   ],
+   "followUp": "Which step takes the most time in your opinion?"
+  },
+  {
+   "id": "recruitment-c2",
+   "skill": "Recruitment",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a structured interview is and why it is fairer than a casual chat.",
+   "keywords": [
+    "same questions",
+    "criteria",
+    "scoring",
+    "fair",
+    "bias",
+    "compare"
+   ],
+   "followUp": "How do you keep a structured interview from feeling like an exam?"
+  },
+  {
+   "id": "recruitment-a1",
+   "skill": "Recruitment",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A company wants to hire a sales executive and receives two hundred CVs on Rozee.pk. How would you shortlist?",
+   "keywords": [
+    "criteria",
+    "must have",
+    "scan",
+    "shortlist",
+    "call",
+    "record"
+   ],
+   "followUp": "What would you do with CVs that nearly match?"
+  },
+  {
+   "id": "recruitment-a2",
+   "skill": "Recruitment",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "The hiring manager rejects every candidate you send. How would you find out why and fix it?",
+   "keywords": [
+    "ask",
+    "feedback",
+    "requirements",
+    "expectations",
+    "calibrate",
+    "meeting"
+   ],
+   "followUp": "What would you change in your screening afterwards?"
+  },
+  {
+   "id": "recruitment-e1",
+   "skill": "Recruitment",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you helped select people, for a society, a team or a job. How did you decide?",
+   "keywords": [
+    "criteria",
+    "screened",
+    "decision",
+    "fair",
+    "result"
+   ],
+   "followUp": "What would you do differently?"
+  },
+  {
+   "id": "communication-s1",
+   "skill": "Communication",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about an important email or message you had to write. How did you make sure it was clear?",
+   "keywords": [
+    "situation",
+    "audience",
+    "clear",
+    "reviewed",
+    "response",
+    "result"
+   ],
+   "followUp": "What would you change in it now?"
+  },
+  {
+   "id": "communication-s2",
+   "skill": "Communication",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Describe a time when a message of yours was misunderstood. What did you do?",
+   "keywords": [
+    "misunderstanding",
+    "noticed",
+    "clarified",
+    "fixed",
+    "learned"
+   ],
+   "followUp": "What do you do now to avoid it?"
+  },
+  {
+   "id": "communication-s3",
+   "skill": "Communication",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a presentation or talk you gave. How did you prepare and how did it go?",
+   "keywords": [
+    "audience",
+    "prepared",
+    "practice",
+    "delivered",
+    "feedback"
+   ],
+   "followUp": "What would you change next time?"
+  },
+  {
+   "id": "communication-s4",
+   "skill": "Communication",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Think of a time you had to share unwelcome news with a friend, teammate or customer. How did you tell them?",
+   "keywords": [
+    "news",
+    "prepared",
+    "honest",
+    "respect",
+    "support",
+    "result"
+   ],
+   "followUp": "How did the person respond?"
+  },
+  {
+   "id": "communication-s5",
+   "skill": "Communication",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you listened carefully and that made a difference.",
+   "keywords": [
+    "listened",
+    "questions",
+    "understood",
+    "action",
+    "result"
+   ],
+   "followUp": "What did you learn by listening?"
+  },
+  {
+   "id": "communication-s6",
+   "skill": "Communication",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Give an example of when you disagreed with someone and still kept a good relationship.",
+   "keywords": [
+    "disagreed",
+    "respectful",
+    "explained",
+    "compromise",
+    "result"
+   ],
+   "followUp": "What was your main lesson from it?"
+  },
+  {
+   "id": "onboarding-c1",
+   "skill": "Onboarding",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is onboarding, and why is it important for a new employee and for the company?",
+   "keywords": [
+    "welcome",
+    "settle",
+    "productive",
+    "retention",
+    "first impression"
+   ],
+   "followUp": "What is the first thing a new employee should feel on day one?"
+  },
+  {
+   "id": "onboarding-c2",
+   "skill": "Onboarding",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between orientation and onboarding.",
+   "keywords": [
+    "orientation",
+    "one day",
+    "onboarding",
+    "weeks",
+    "months",
+    "training"
+   ],
+   "followUp": "How long should onboarding last?"
+  },
+  {
+   "id": "onboarding-a1",
+   "skill": "Onboarding",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new graphic designer joins your company on Monday. What would you prepare before they arrive?",
+   "keywords": [
+    "desk",
+    "laptop",
+    "accounts",
+    "schedule",
+    "welcome",
+    "buddy"
+   ],
+   "followUp": "What would you do on the first day?"
+  },
+  {
+   "id": "onboarding-a2",
+   "skill": "Onboarding",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A new employee resigns after only three weeks. How would you find the reason and improve onboarding?",
+   "keywords": [
+    "exit talk",
+    "feedback",
+    "expectations",
+    "support",
+    "process",
+    "changes"
+   ],
+   "followUp": "What would you ask the manager?"
+  },
+  {
+   "id": "onboarding-e1",
+   "skill": "Onboarding",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you joined a new team or helped someone who did. What helped or was missing?",
+   "keywords": [
+    "joined",
+    "support",
+    "missing",
+    "helped",
+    "result"
+   ],
+   "followUp": "What would you add for the next new person?"
+  },
+  {
+   "id": "hr-policies-labour-law-basics-c1",
+   "skill": "HR policies & labour law basics",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the purpose of an employee handbook or a leave policy?",
+   "keywords": [
+    "rules",
+    "rights",
+    "fair",
+    "clarity",
+    "consistent"
+   ],
+   "followUp": "Who should read it and when?"
+  },
+  {
+   "id": "hr-policies-labour-law-basics-c2",
+   "skill": "HR policies & labour law basics",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain why a company must give appointment letters and keep clear records of employment terms.",
+   "keywords": [
+    "appointment letter",
+    "terms",
+    "proof",
+    "disputes",
+    "rights",
+    "law"
+   ],
+   "followUp": "What would you put in the letter?"
+  },
+  {
+   "id": "hr-policies-labour-law-basics-a1",
+   "skill": "HR policies & labour law basics",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "An employee asks how many casual and annual leaves they get. How would you answer?",
+   "keywords": [
+    "policy",
+    "check",
+    "entitlement",
+    "balance",
+    "explain",
+    "document"
+   ],
+   "followUp": "What if the policy is not clear?"
+  },
+  {
+   "id": "hr-policies-labour-law-basics-a2",
+   "skill": "HR policies & labour law basics",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A manager wants to dismiss an employee on the spot for being late. How would you advise?",
+   "keywords": [
+    "procedure",
+    "warning",
+    "documents",
+    "fair",
+    "law",
+    "hearing"
+   ],
+   "followUp": "What records would you keep?"
+  },
+  {
+   "id": "hr-policies-labour-law-basics-e1",
+   "skill": "HR policies & labour law basics",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you had to follow or explain rules to others. How did you do it?",
+   "keywords": [
+    "rules",
+    "explained",
+    "fair",
+    "reaction",
+    "result"
+   ],
+   "followUp": "What happens when someone refuses?"
+  },
+  {
+   "id": "hrms-tools-c1",
+   "skill": "HRMS tools",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is an HRMS, and what kinds of tasks does it handle?",
+   "keywords": [
+    "employee records",
+    "attendance",
+    "leave",
+    "payroll",
+    "reports"
+   ],
+   "followUp": "Which task saves the most time?"
+  },
+  {
+   "id": "hrms-tools-c2",
+   "skill": "HRMS tools",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain why access levels are important in an HR system.",
+   "keywords": [
+    "access",
+    "privacy",
+    "roles",
+    "confidential",
+    "security",
+    "audit"
+   ],
+   "followUp": "Who should see salaries?"
+  },
+  {
+   "id": "hrms-tools-a1",
+   "skill": "HRMS tools",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "HR keeps all employee data in separate Excel files. What problems can happen, and how would an HR system help?",
+   "keywords": [
+    "errors",
+    "versions",
+    "lost",
+    "central",
+    "search",
+    "reports"
+   ],
+   "followUp": "What is the first thing you would move to the system?"
+  },
+  {
+   "id": "hrms-tools-a2",
+   "skill": "HRMS tools",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "An employee says their leave balance in the system is wrong. How would you check and fix it?",
+   "keywords": [
+    "check",
+    "records",
+    "approvals",
+    "correct",
+    "log",
+    "inform"
+   ],
+   "followUp": "How would you stop it from happening again?"
+  },
+  {
+   "id": "hrms-tools-e1",
+   "skill": "HRMS tools",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used software to organise records or data about people.",
+   "keywords": [
+    "software",
+    "records",
+    "data",
+    "benefit",
+    "learned"
+   ],
+   "followUp": "How did you protect private information?"
+  },
+  {
+   "id": "conflict-resolution-c1",
+   "skill": "Conflict resolution",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What are some common causes of conflict between coworkers?",
+   "keywords": [
+    "communication",
+    "workload",
+    "credit",
+    "personality",
+    "unclear roles"
+   ],
+   "followUp": "Which cause is easiest to prevent?"
+  },
+  {
+   "id": "conflict-resolution-c2",
+   "skill": "Conflict resolution",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what mediation is and how it differs from taking a decision for people.",
+   "keywords": [
+    "neutral",
+    "both sides",
+    "agreement",
+    "facilitate",
+    "decide",
+    "voluntary"
+   ],
+   "followUp": "When should you escalate instead?"
+  },
+  {
+   "id": "conflict-resolution-a1",
+   "skill": "Conflict resolution",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Two colleagues keep arguing about who should clean the shared files. How would you help?",
+   "keywords": [
+    "listen",
+    "both",
+    "facts",
+    "agree",
+    "rules",
+    "follow up"
+   ],
+   "followUp": "What would you say first?"
+  },
+  {
+   "id": "conflict-resolution-a2",
+   "skill": "Conflict resolution",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A teammate says a manager treats them unfairly. How would you handle the complaint?",
+   "keywords": [
+    "listen",
+    "confidential",
+    "facts",
+    "both sides",
+    "policy",
+    "fair"
+   ],
+   "followUp": "What if the claim turns out to be false?"
+  },
+  {
+   "id": "conflict-resolution-e1",
+   "skill": "Conflict resolution",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you were part of a conflict or helped end one. What did you do?",
+   "keywords": [
+    "situation",
+    "listened",
+    "calm",
+    "solution",
+    "result"
+   ],
+   "followUp": "What did you learn about yourself?"
+  },
+  {
+   "id": "accounting-c1",
+   "skill": "Accounting",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the accounting equation, and what does each part mean?",
+   "keywords": [
+    "assets",
+    "liabilities",
+    "equity",
+    "balance",
+    "equation"
+   ],
+   "followUp": "Can you give a small example?"
+  },
+  {
+   "id": "accounting-c2",
+   "skill": "Accounting",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between cash basis and accrual accounting.",
+   "keywords": [
+    "cash",
+    "accrual",
+    "earned",
+    "paid",
+    "timing",
+    "records"
+   ],
+   "followUp": "Which is better for a bigger business, and why?"
+  },
+  {
+   "id": "accounting-a1",
+   "skill": "Accounting",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A shop buys goods for fifty thousand rupees on credit. How would you record it in the books?",
+   "keywords": [
+    "purchases",
+    "payable",
+    "debit",
+    "credit",
+    "supplier",
+    "entry"
+   ],
+   "followUp": "What would you record when the shop pays later?"
+  },
+  {
+   "id": "accounting-a2",
+   "skill": "Accounting",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "At month end, the trial balance does not match. How would you find the mistake?",
+   "keywords": [
+    "totals",
+    "differences",
+    "check entries",
+    "transposed",
+    "ledger",
+    "review"
+   ],
+   "followUp": "Which mistakes does a trial balance not catch?"
+  },
+  {
+   "id": "accounting-e1",
+   "skill": "Accounting",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used accounting at university or work. What did you record or learn?",
+   "keywords": [
+    "records",
+    "entries",
+    "result",
+    "mistake",
+    "learned"
+   ],
+   "followUp": "What was the most difficult topic for you?"
+  },
+  {
+   "id": "bookkeeping-reconciliation-c1",
+   "skill": "Bookkeeping & reconciliation",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between a ledger and a journal?",
+   "keywords": [
+    "journal",
+    "first record",
+    "ledger",
+    "grouped",
+    "accounts",
+    "posting"
+   ],
+   "followUp": "Why do we record in both?"
+  },
+  {
+   "id": "bookkeeping-reconciliation-c2",
+   "skill": "Bookkeeping & reconciliation",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a bank reconciliation is and why a company does one every month.",
+   "keywords": [
+    "bank statement",
+    "cash book",
+    "differences",
+    "outstanding",
+    "errors",
+    "match"
+   ],
+   "followUp": "What are outstanding cheques?"
+  },
+  {
+   "id": "bookkeeping-reconciliation-a1",
+   "skill": "Bookkeeping & reconciliation",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A company records a payment of ten thousand rupees but the bank shows ten thousand five hundred. How would you look for the reason?",
+   "keywords": [
+    "compare",
+    "charges",
+    "errors",
+    "transposition",
+    "check",
+    "adjust"
+   ],
+   "followUp": "What would you do if it is a bank charge?"
+  },
+  {
+   "id": "bookkeeping-reconciliation-a2",
+   "skill": "Bookkeeping & reconciliation",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Petty cash in the office is short by two thousand rupees at the end of the week. What would you do?",
+   "keywords": [
+    "count",
+    "vouchers",
+    "receipts",
+    "compare",
+    "ask",
+    "report"
+   ],
+   "followUp": "How would you control petty cash in future?"
+  },
+  {
+   "id": "bookkeeping-reconciliation-e1",
+   "skill": "Bookkeeping & reconciliation",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you kept records, notes or accounts for something. How did you keep them accurate?",
+   "keywords": [
+    "records",
+    "check",
+    "habit",
+    "mistake",
+    "result"
+   ],
+   "followUp": "How did you find your mistakes?"
+  },
+  {
+   "id": "taxation-basics-fbr-c1",
+   "skill": "Taxation basics (FBR)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the FBR, and what is an NTN?",
+   "keywords": [
+    "federal board of revenue",
+    "tax collection",
+    "ntn",
+    "national tax number",
+    "register"
+   ],
+   "followUp": "Who needs to register for an NTN?"
+  },
+  {
+   "id": "taxation-basics-fbr-c2",
+   "skill": "Taxation basics (FBR)",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between income tax and sales tax in Pakistan.",
+   "keywords": [
+    "income",
+    "profit",
+    "salary",
+    "sales",
+    "goods",
+    "services"
+   ],
+   "followUp": "Who finally pays sales tax?"
+  },
+  {
+   "id": "taxation-basics-fbr-a1",
+   "skill": "Taxation basics (FBR)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A salaried person asks how to file an income tax return. What documents would you ask them for?",
+   "keywords": [
+    "salary slip",
+    "tax deducted",
+    "bank",
+    "ntn",
+    "iris",
+    "investments"
+   ],
+   "followUp": "Which documents prove the tax already deducted?"
+  },
+  {
+   "id": "taxation-basics-fbr-a2",
+   "skill": "Taxation basics (FBR)",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "A small company deducted withholding tax from a supplier. What would you do with the amount?",
+   "keywords": [
+    "withheld",
+    "record",
+    "deposit",
+    "deadline",
+    "challan",
+    "certificate"
+   ],
+   "followUp": "What might happen if it is paid late?"
+  },
+  {
+   "id": "taxation-basics-fbr-e1",
+   "skill": "Taxation basics (FBR)",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you learned about tax or helped with a tax task or form. What did you learn?",
+   "keywords": [
+    "tax",
+    "form",
+    "rules",
+    "deadline",
+    "result"
+   ],
+   "followUp": "Where do you look for current tax rules?"
+  },
+  {
+   "id": "quickbooks-tally-c1",
+   "skill": "QuickBooks/Tally",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "Name three things accounting software does for a business that a paper register cannot.",
+   "keywords": [
+    "speed",
+    "accuracy",
+    "reports",
+    "records",
+    "automation",
+    "audit"
+   ],
+   "followUp": "What risks come with software?"
+  },
+  {
+   "id": "quickbooks-tally-c2",
+   "skill": "QuickBooks/Tally",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain what a chart of accounts is and why it matters when setting up accounting software.",
+   "keywords": [
+    "list",
+    "accounts",
+    "groups",
+    "codes",
+    "structure",
+    "reports"
+   ],
+   "followUp": "How would you set it up for a small shop?"
+  },
+  {
+   "id": "quickbooks-tally-a1",
+   "skill": "QuickBooks/Tally",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new trading company asks you to set up its accounts in Tally. What would you do first?",
+   "keywords": [
+    "company",
+    "accounts",
+    "opening balances",
+    "stock",
+    "ledgers",
+    "vouchers"
+   ],
+   "followUp": "What opening balances would you need?"
+  },
+  {
+   "id": "quickbooks-tally-a2",
+   "skill": "QuickBooks/Tally",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "After month end the software shows a report that looks wrong. How would you check it?",
+   "keywords": [
+    "entries",
+    "date",
+    "duplicate",
+    "wrong account",
+    "compare",
+    "correct"
+   ],
+   "followUp": "How would you fix a wrong entry safely?"
+  },
+  {
+   "id": "quickbooks-tally-e1",
+   "skill": "QuickBooks/Tally",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you used QuickBooks, Tally or other accounting software.",
+   "keywords": [
+    "software",
+    "tasks",
+    "entries",
+    "reports",
+    "learned"
+   ],
+   "followUp": "What was the hardest feature to learn?"
+  },
+  {
+   "id": "attention-to-detail-c1",
+   "skill": "Attention to detail",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "Why does attention to detail matter in jobs that deal with money, records or customer data?",
+   "keywords": [
+    "mistakes",
+    "accuracy",
+    "trust",
+    "cost",
+    "records",
+    "customers"
+   ],
+   "followUp": "What is the cost of one wrong digit in an invoice?"
+  },
+  {
+   "id": "attention-to-detail-c2",
+   "skill": "Attention to detail",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between checking your own work and having someone else review it.",
+   "keywords": [
+    "self check",
+    "fresh eyes",
+    "blind spots",
+    "reviewer",
+    "control",
+    "two people"
+   ],
+   "followUp": "When is a second reviewer worth the extra time?"
+  },
+  {
+   "id": "attention-to-detail-a1",
+   "skill": "Attention to detail",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You must enter two hundred invoices into a sheet by the end of the day. How would you keep errors low?",
+   "keywords": [
+    "checklist",
+    "totals",
+    "sample",
+    "double-check",
+    "breaks",
+    "format"
+   ],
+   "followUp": "What would you check at the very end?"
+  },
+  {
+   "id": "attention-to-detail-a2",
+   "skill": "Attention to detail",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You find that last month's report had a wrong total, and it was already sent to the manager. What do you do?",
+   "keywords": [
+    "verify",
+    "tell",
+    "correct",
+    "impact",
+    "apology",
+    "prevent"
+   ],
+   "followUp": "How would you stop it from happening again?"
+  },
+  {
+   "id": "attention-to-detail-e1",
+   "skill": "Attention to detail",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you found a mistake that others had missed. What did you do?",
+   "keywords": [
+    "mistake",
+    "noticed",
+    "checked",
+    "reported",
+    "result"
+   ],
+   "followUp": "How did you check that you were right?"
+  },
+  {
+   "id": "financial-analysis-c1",
+   "skill": "Financial analysis",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between revenue and profit?",
+   "keywords": [
+    "revenue",
+    "sales",
+    "costs",
+    "expenses",
+    "profit",
+    "margin"
+   ],
+   "followUp": "Can a company have high revenue and low profit?"
+  },
+  {
+   "id": "financial-analysis-c2",
+   "skill": "Financial analysis",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the current ratio and what it tells you about a company.",
+   "keywords": [
+    "current assets",
+    "current liabilities",
+    "liquidity",
+    "pay bills",
+    "short term",
+    "ratio"
+   ],
+   "followUp": "What would a very low ratio mean?"
+  },
+  {
+   "id": "financial-analysis-a1",
+   "skill": "Financial analysis",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A company's sales rose by twenty percent but its profit fell. How would you find out why?",
+   "keywords": [
+    "costs",
+    "expenses",
+    "margin",
+    "compare",
+    "statement",
+    "reason"
+   ],
+   "followUp": "What would you ask the finance team?"
+  },
+  {
+   "id": "financial-analysis-a2",
+   "skill": "Financial analysis",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your manager wants to know if a small textile company is financially healthy. What would you look at?",
+   "keywords": [
+    "profit",
+    "cash",
+    "debt",
+    "liquidity",
+    "trend",
+    "ratios"
+   ],
+   "followUp": "Which sign would worry you the most?"
+  },
+  {
+   "id": "financial-analysis-e1",
+   "skill": "Financial analysis",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you analysed a company's numbers, in class or work. What did you conclude?",
+   "keywords": [
+    "statements",
+    "ratios",
+    "finding",
+    "recommendation",
+    "result"
+   ],
+   "followUp": "What limits did your analysis have?"
+  },
+  {
+   "id": "financial-modelling-c1",
+   "skill": "Financial modelling",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is a financial forecast and why do businesses make one?",
+   "keywords": [
+    "future",
+    "revenue",
+    "costs",
+    "plan",
+    "decisions",
+    "estimate"
+   ],
+   "followUp": "How far ahead should a small business forecast?"
+  },
+  {
+   "id": "financial-modelling-c2",
+   "skill": "Financial modelling",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain why assumptions are the most important part of a financial model.",
+   "keywords": [
+    "assumptions",
+    "inputs",
+    "growth",
+    "change",
+    "sensitive",
+    "documented"
+   ],
+   "followUp": "How would you test how sensitive the result is?"
+  },
+  {
+   "id": "financial-modelling-a1",
+   "skill": "Financial modelling",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "A new coffee shop expects to sell more in summer than winter. How would you build a simple forecast for a year?",
+   "keywords": [
+    "sales",
+    "monthly",
+    "costs",
+    "seasonality",
+    "rent",
+    "profit"
+   ],
+   "followUp": "What costs would stay the same every month?"
+  },
+  {
+   "id": "financial-modelling-a2",
+   "skill": "Financial modelling",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Your forecast shows a profit but the company runs out of cash in month four. How can that happen?",
+   "keywords": [
+    "cash flow",
+    "timing",
+    "receivables",
+    "payments",
+    "stock",
+    "profit"
+   ],
+   "followUp": "How would you fix the plan?"
+  },
+  {
+   "id": "financial-modelling-e1",
+   "skill": "Financial modelling",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you made a budget or a forecast. What was it for?",
+   "keywords": [
+    "budget",
+    "assumptions",
+    "numbers",
+    "compared",
+    "result"
+   ],
+   "followUp": "How close was the actual result?"
+  },
+  {
+   "id": "financial-reporting-c1",
+   "skill": "Financial reporting",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What are the three main financial statements, and what does each one show?",
+   "keywords": [
+    "income statement",
+    "balance sheet",
+    "cash flow",
+    "profit",
+    "position",
+    "cash"
+   ],
+   "followUp": "Which one would a bank look at first?"
+  },
+  {
+   "id": "financial-reporting-c2",
+   "skill": "Financial reporting",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain why management reports are different from the statutory annual accounts.",
+   "keywords": [
+    "management",
+    "monthly",
+    "internal",
+    "decisions",
+    "statutory",
+    "rules"
+   ],
+   "followUp": "Who reads each report?"
+  },
+  {
+   "id": "financial-reporting-a1",
+   "skill": "Financial reporting",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "You must prepare a monthly report for the owner of a pharmacy. What would you include?",
+   "keywords": [
+    "sales",
+    "expenses",
+    "profit",
+    "cash",
+    "comparison",
+    "comments"
+   ],
+   "followUp": "How would you keep it to one page?"
+  },
+  {
+   "id": "financial-reporting-a2",
+   "skill": "Financial reporting",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "The numbers in two reports for the same month do not match. How would you find the difference?",
+   "keywords": [
+    "source",
+    "period",
+    "definitions",
+    "reconcile",
+    "check",
+    "explain"
+   ],
+   "followUp": "What would you tell the manager meanwhile?"
+  },
+  {
+   "id": "financial-reporting-e1",
+   "skill": "Financial reporting",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you prepared or presented a report with numbers. How did you explain it to others?",
+   "keywords": [
+    "report",
+    "numbers",
+    "audience",
+    "explanation",
+    "feedback"
+   ],
+   "followUp": "What questions did people ask?"
+  },
+  {
+   "id": "payroll-processing-c1",
+   "skill": "Payroll processing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "What is the difference between gross salary and net salary?",
+   "keywords": [
+    "gross",
+    "net",
+    "deductions",
+    "take home",
+    "tax",
+    "allowances"
+   ],
+   "followUp": "What deductions are common in Pakistan?"
+  },
+  {
+   "id": "payroll-processing-c2",
+   "skill": "Payroll processing",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the main steps of running a monthly payroll.",
+   "keywords": [
+    "attendance",
+    "calculate",
+    "deductions",
+    "approval",
+    "payment",
+    "payslip"
+   ],
+   "followUp": "Why must someone else approve it?"
+  },
+  {
+   "id": "payroll-processing-a1",
+   "skill": "Payroll processing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "An employee asks why their salary slip shows less than last month. How would you explain it?",
+   "keywords": [
+    "check",
+    "absences",
+    "deductions",
+    "tax",
+    "explain",
+    "correct"
+   ],
+   "followUp": "What if the slip itself has an error?"
+  },
+  {
+   "id": "payroll-processing-a2",
+   "skill": "Payroll processing",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "You find that an employee was overpaid by ten thousand rupees last month. What would you do?",
+   "keywords": [
+    "verify",
+    "inform",
+    "approval",
+    "recover",
+    "policy",
+    "record"
+   ],
+   "followUp": "How would you avoid the mistake in future?"
+  },
+  {
+   "id": "payroll-processing-e1",
+   "skill": "Payroll processing",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "medium",
+   "text": "Tell me about a time you worked with salary numbers or bills where accuracy mattered.",
+   "keywords": [
+    "numbers",
+    "checked",
+    "mistake",
+    "confidential",
+    "result"
+   ],
+   "followUp": "How did you keep the information private?"
+  },
+  {
+   "id": "attendance-leave-management-c1",
+   "skill": "Attendance & leave management",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "easy",
+   "text": "Why do companies keep attendance and leave records?",
+   "keywords": [
+    "payroll",
+    "discipline",
+    "planning",
+    "proof",
+    "fairness",
+    "law"
+   ],
+   "followUp": "Who should be able to see them?"
+  },
+  {
+   "id": "attendance-leave-management-c2",
+   "skill": "Attendance & leave management",
+   "type": "technical",
+   "kind": "concept",
+   "difficulty": "medium",
+   "text": "Explain the difference between paid leave, unpaid leave and sick leave.",
+   "keywords": [
+    "paid",
+    "unpaid",
+    "sick",
+    "approval",
+    "balance",
+    "policy"
+   ],
+   "followUp": "What proof might be needed for sick leave?"
+  },
+  {
+   "id": "attendance-leave-management-a1",
+   "skill": "Attendance & leave management",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "easy",
+   "text": "Biometric attendance data shows an employee absent on a day they say they were at work. What would you do?",
+   "keywords": [
+    "check",
+    "system",
+    "manager",
+    "proof",
+    "correct",
+    "record"
+   ],
+   "followUp": "How would you record the correction?"
+  },
+  {
+   "id": "attendance-leave-management-a2",
+   "skill": "Attendance & leave management",
+   "type": "technical",
+   "kind": "applied",
+   "difficulty": "medium",
+   "text": "Many employees ask for leave in the same week of Eid. How would you handle it?",
+   "keywords": [
+    "policy",
+    "rotation",
+    "fair",
+    "coverage",
+    "approval",
+    "plan"
+   ],
+   "followUp": "How would you communicate the decision?"
+  },
+  {
+   "id": "attendance-leave-management-e1",
+   "skill": "Attendance & leave management",
+   "type": "technical",
+   "kind": "experience",
+   "difficulty": "easy",
+   "text": "Tell me about a time you kept track of attendance, a roster or time sheets. How did you do it?",
+   "keywords": [
+    "tracking",
+    "records",
+    "accuracy",
+    "problem",
+    "result"
+   ],
+   "followUp": "What problem did you notice most?"
+  },
+  {
+   "id": "leadership-s1",
+   "skill": "Leadership",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you led a group, even in a small way. What was your approach?",
+   "keywords": [
+    "situation",
+    "role",
+    "direction",
+    "team",
+    "result"
+   ],
+   "followUp": "What did you learn about leading?"
+  },
+  {
+   "id": "leadership-s2",
+   "skill": "Leadership",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Describe a time you motivated others when they were tired or discouraged.",
+   "keywords": [
+    "morale",
+    "listened",
+    "support",
+    "encouraged",
+    "result"
+   ],
+   "followUp": "What worked best for different people?"
+  },
+  {
+   "id": "leadership-s3",
+   "skill": "Leadership",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Tell me about a time you took responsibility for a mistake in a team. What did you do?",
+   "keywords": [
+    "mistake",
+    "owned",
+    "fixed",
+    "told",
+    "learned"
+   ],
+   "followUp": "How did the team react?"
+  },
+  {
+   "id": "leadership-s4",
+   "skill": "Leadership",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Describe a time you had to make a difficult decision for a group.",
+   "keywords": [
+    "options",
+    "information",
+    "decision",
+    "explained",
+    "result"
+   ],
+   "followUp": "Would you decide the same way now?"
+  },
+  {
+   "id": "leadership-s5",
+   "skill": "Leadership",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "easy",
+   "text": "Give an example of when you helped someone grow or learn a new skill.",
+   "keywords": [
+    "helped",
+    "patient",
+    "feedback",
+    "progress",
+    "result"
+   ],
+   "followUp": "How did you know they improved?"
+  },
+  {
+   "id": "leadership-s6",
+   "skill": "Leadership",
+   "type": "behavioral",
+   "kind": "star",
+   "difficulty": "medium",
+   "text": "Tell me about a time you led a task with people who were older or more senior than you.",
+   "keywords": [
+    "respect",
+    "listened",
+    "clear",
+    "goals",
+    "result"
+   ],
+   "followUp": "What was the hardest part?"
+  }
+ ]
+}

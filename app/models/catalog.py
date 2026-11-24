@@ -65,7 +65,10 @@ class RoleSkill(TimestampMixin, Base):
 
 class QuestionTemplate(TimestampMixin, Base):
     __tablename__ = "question_templates"
-    __table_args__ = (CheckConstraint("type IN ('technical', 'behavioral')", name="type"),)
+    __table_args__ = (
+        CheckConstraint("type IN ('technical', 'behavioral')", name="type"),
+        CheckConstraint("difficulty IN ('easy', 'medium', 'hard')", name="difficulty"),
+    )
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     skill_id: Mapped[str] = mapped_column(
@@ -75,6 +78,7 @@ class QuestionTemplate(TimestampMixin, Base):
     text: Mapped[str] = mapped_column(Text)
     keywords: Mapped[list[str]] = mapped_column(JSONType, default=list)
     follow_up: Mapped[str] = mapped_column(Text, default="", server_default="")
+    difficulty: Mapped[str] = mapped_column(String(10), default="medium", server_default="medium")  # easy | medium | hard
     source: Mapped[str] = mapped_column(String(20), default="admin", server_default="admin")  # "admin" | "generated"
 
     skill: Mapped[Skill] = relationship()

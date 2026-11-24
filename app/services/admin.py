@@ -286,7 +286,8 @@ def delete_role(db: Session, role_id: str) -> None:
 
 def _question_out(q: QuestionTemplate) -> QuestionOut:
     return QuestionOut(
-        id=q.id, skill=q.skill.name, type=q.type, text=q.text, keywords=q.keywords or [], follow_up=q.follow_up
+        id=q.id, skill=q.skill.name, type=q.type, text=q.text, keywords=q.keywords or [], follow_up=q.follow_up,
+        difficulty=q.difficulty,
     )
 
 
@@ -328,7 +329,7 @@ def create_question(db: Session, body: QuestionIn) -> QuestionOut:
         raise _error(status.HTTP_409_CONFLICT, f"{skill.name} already has this question.")
     q = QuestionTemplate(
         id=new_id("q"), skill_id=skill.id, type=body.type, text=body.text,
-        keywords=body.keywords, follow_up=body.follow_up, source="admin",
+        keywords=body.keywords, follow_up=body.follow_up, difficulty=body.difficulty, source="admin",
     )
     db.add(q)
     db.commit()
@@ -341,6 +342,7 @@ def update_question(db: Session, question_id: str, body: QuestionIn) -> Question
     if _duplicate_question(db, skill.id, body.text, question_id):
         raise _error(status.HTTP_409_CONFLICT, f"{skill.name} already has this question.")
     q.skill_id, q.type, q.text, q.keywords, q.follow_up = skill.id, body.type, body.text, body.keywords, body.follow_up
+    q.difficulty = body.difficulty
     db.commit()
     db.expire_all()
     return _question_out(_get_question(db, question_id))
