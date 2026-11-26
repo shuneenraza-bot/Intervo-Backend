@@ -95,7 +95,7 @@ def test_candidate_saves_session(client, db):
     first, second = saved["answers"]
     assert first == {"questionId": None, "question": "About React?", "skill": "React", "type": "technical", "score": 82,
                      "criteria": {"relevance": 82}, "answer": "", "reason": "role", "followUp": None,
-                     "indicators": {"eyeContact": 80}}
+                     "indicators": {"eyeContact": 80}, "questionOrigin": "template"}
     assert second["skill"] == ""  # not in the server's skill library
     assert SECRET_ANSWER not in res.text
 

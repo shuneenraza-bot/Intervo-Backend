@@ -1,6 +1,7 @@
 """Request bodies for the interview endpoints, and the shapes the AI must return."""
 
 import math
+import re
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
@@ -93,17 +94,44 @@ class LLMEvaluation(BaseModel):
         return [t.strip()[:220] for t in tips if isinstance(t, str) and t.strip()][:3]
 
 
-class LLMQuestion(BaseModel):
+MAX_QUESTION_WORDS = 59  # "under 60 words"
+# Asking the candidate to write, run or trace code.
+CODING = re.compile(
+    r"\b(write|code|type out|compose)\b[^.?!]{0,40}\b(code|function|program|script|query|snippet|method|class)\b"
+    r"|\bimplement (a |an |the )?(function|method|class|program|algorithm)\b"
+    r"|\boutput of\b|\bcode snippet\b|\b(following|this|below) code\b|\brun (this|the following)\b|\bleetcode\b|```",
+    re.I,
+)
+
+
+class LLMGeneratedQuestion(BaseModel):
+    """A new interview question. Output that breaks these rules is not used; the checks that need
+    the database (right skill, not a repeat) are in app/services/question_gen.py."""
+
+    skill: str = Field(min_length=1, max_length=120)
     text: str = Field(min_length=15, max_length=600)
-    keywords: list[str] = Field(default_factory=list)
-    follow_up: str = Field(default="", max_length=400)
+    keywords: list[str]
+    follow_up: str = Field(min_length=10, max_length=400)
+
+    @field_validator("text", "follow_up")
+    @classmethod
+    def short_and_no_coding(cls, v: str) -> str:
+        v = " ".join(v.split())
+        if len(v.split()) > MAX_QUESTION_WORDS:
+            raise ValueError("a question must be under 60 words")
+        if CODING.search(v):
+            raise ValueError("no coding or code-execution questions")
+        return v
 
     @field_validator("keywords", mode="before")
     @classmethod
-    def clean_keywords(cls, v: Any) -> list[str]:
+    def four_to_six_key_points(cls, v: Any) -> list[str]:
         if not isinstance(v, list):
-            return []
-        return list(dict.fromkeys(k.strip().lower()[:40] for k in v if isinstance(k, str) and k.strip()))[:8]
+            raise ValueError("keywords must be a list")
+        points = list(dict.fromkeys(" ".join(k.split()).lower()[:60] for k in v if isinstance(k, str) and k.strip()))
+        if not 4 <= len(points) <= 6:
+            raise ValueError("4 to 6 different key points are needed")
+        return points
 
 
 class LLMFollowUp(BaseModel):

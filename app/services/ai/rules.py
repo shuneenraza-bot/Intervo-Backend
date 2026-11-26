@@ -15,8 +15,6 @@ class RuleBasedProvider(LLMProvider):
             return interview_rules.evaluate(
                 context["answer"], context["question"], context.get("aliases") or [], context.get("follow_up_below", 55)
             )
-        if task == "question":
-            return interview_rules.generic_question(context["skill"], context["role"], context["type"])
         if task == "follow_up":
             return {"question": interview_rules.GENERIC_FOLLOW_UP}
         text, skills = context["text"], context.get("skills") or []

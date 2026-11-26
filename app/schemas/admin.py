@@ -140,6 +140,8 @@ class QuestionOut(CamelModel):
     keywords: list[str]
     follow_up: str
     difficulty: str = "medium"
+    source: str = "admin"  # "admin" | "generated"
+    status: str = "approved"  # "generated" until an admin approves it
 
 
 class CriterionIn(CamelModel):

@@ -60,6 +60,7 @@ def session_out(session: InterviewSession) -> dict:
                 "reason": a.reason,
                 "followUp": None,
                 "indicators": a.indicators,
+                "questionOrigin": a.question_origin,
             }
             for a in session.answers
         ],

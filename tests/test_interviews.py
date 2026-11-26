@@ -6,7 +6,7 @@ import pytest
 from app.config import settings
 from app.models import Domain, EvaluationCriterion, JobRole, QuestionTemplate, RoleSkill, ScoringRules, Skill
 from app.services import ai
-from app.services.ai.base import LLMProvider
+from app.services.ai.base import AIUnavailable, LLMProvider
 from app.services.matching import js_round
 from tests.conftest import candidate_payload, signup_full
 
@@ -109,15 +109,17 @@ def test_a_skill_without_a_template_gets_a_generated_question(client, auth, libr
         name = "gemini"
 
         def generate_json(self, prompt, schema, **context):
-            return {"text": "How do you structure a small Python script that reads a CSV file?",
-                    "keywords": ["Function", "csv", "csv"], "follow_up": "How would you test it?"}
+            if context["skill"] != "Python":
+                raise AIUnavailable("only Python is written here")
+            return {"skill": context["skill"], "text": f"How would you explain your use of {context['skill']} to a new teammate?",
+                    "keywords": ["Function", "csv", "csv", "module", "testing"], "follow_up": "How would you test it?"}
 
     monkeypatch.setattr(ai, "get_provider", lambda: Writer())
     interview = start(client, auth, count=5)
     generated = next(q for q in interview["questions"] if q["skill"] == "Python")
     template = db.get(QuestionTemplate, generated["templateId"])
-    assert template.source == "generated" and template.keywords == ["function", "csv"]
-    assert generated["question"].startswith("How do you structure")
+    assert template.source == "generated" and template.keywords == ["function", "csv", "module", "testing"]
+    assert generated["question"].startswith("How would you explain")
 
 
 def test_offline_stand_in_question_is_not_saved(client, auth, library, db):
@@ -378,8 +380,6 @@ def test_follow_up_retries_a_missing_criterion_and_fills_only_the_gap(client, au
 
 
 def test_follow_up_survives_a_brief_gemini_failure(client, auth, library, monkeypatch):
-    from app.services.ai.base import AIUnavailable
-
     class Flaky(SequencedGemini):
         failures = 0
 

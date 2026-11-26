@@ -287,7 +287,7 @@ def delete_role(db: Session, role_id: str) -> None:
 def _question_out(q: QuestionTemplate) -> QuestionOut:
     return QuestionOut(
         id=q.id, skill=q.skill.name, type=q.type, text=q.text, keywords=q.keywords or [], follow_up=q.follow_up,
-        difficulty=q.difficulty,
+        difficulty=q.difficulty, source=q.source, status=q.status,
     )
 
 
@@ -345,6 +345,14 @@ def update_question(db: Session, question_id: str, body: QuestionIn) -> Question
     q.difficulty = body.difficulty
     db.commit()
     db.expire_all()
+    return _question_out(_get_question(db, question_id))
+
+
+def approve_question(db: Session, question_id: str) -> QuestionOut:
+    """A generated question joins the bank, can be asked to anyone and no longer belongs to a candidate."""
+    q = _get_question(db, question_id)
+    q.status, q.candidate_id = "approved", None
+    db.commit()
     return _question_out(_get_question(db, question_id))
 
 

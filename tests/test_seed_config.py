@@ -11,7 +11,8 @@ from app.config import settings
 from app.models import (
     Domain, InterviewSession, Job, JobRole, JobSkill, QuestionTemplate, RoleSkill, SessionAnswer, Skill, User,
 )
-from app.services import interview
+from app.services import ai, interview
+from app.services.ai.base import AIUnavailable, LLMProvider
 from app.services.ai.prompts import question_prompt
 from app.services.catalog import load_config
 from app.services.security import hash_password
@@ -168,19 +169,21 @@ def test_public_config_hides_inactive_roles_and_shows_responsibilities(db):
 # ---------- responsibilities reach the question prompt ----------
 
 def test_prompt_includes_responsibilities():
-    prompt = question_prompt("Data Analyst", "SQL", "technical", ["Clean data", "Find trends"])
-    assert "- Clean data" in prompt and "- Find trends" in prompt and "write or run code" in prompt
-    assert "day to day" not in question_prompt("Data Analyst", "SQL", "technical")
+    prompt = question_prompt("Data Analyst", ["Clean data", "Find trends"], "SQL", "technical", "easy", [], [], [], [], [])
+    assert "- Clean data" in prompt and "- Find trends" in prompt and "No coding" in prompt and "Difficulty: easy" in prompt
 
 
 def test_generated_questions_get_the_role_responsibilities(db, monkeypatch):
     seen = []
 
-    def fake(prompt, schema, **ctx):
-        seen.append(prompt)
-        return schema.model_validate({"text": "A generated question for this skill?", "keywords": ["a"], "follow_up": "Why?"}), "rules"
+    class Recorder(LLMProvider):
+        name = "gemini"
 
-    monkeypatch.setattr(interview, "run_json_task", fake)
+        def generate_json(self, prompt, schema, **context):
+            seen.append(prompt)
+            raise AIUnavailable("recorded only")
+
+    monkeypatch.setattr(ai, "get_provider", lambda: Recorder())
     db.add(Skill(id="sql", name="SQL", aliases=["sql"], related=[]))
     db.commit()
     interview.select_questions(db, "Data Analyst", [{"name": "SQL", "weight": 3}], [], [], 1, ["Clean data", "Find trends"])

@@ -33,7 +33,8 @@ def load_config(db: Session) -> dict:
         .options(selectinload(JobRole.skills).selectinload(RoleSkill.skill)).order_by(JobRole.title)
     )
     questions = db.scalars(
-        select(QuestionTemplate).options(selectinload(QuestionTemplate.skill)).order_by(QuestionTemplate.id)
+        select(QuestionTemplate).where(QuestionTemplate.status == "approved")  # never another candidate's
+        .options(selectinload(QuestionTemplate.skill)).order_by(QuestionTemplate.id)
     )
     return {
         "domains": [{"id": d.id, "name": d.name} for d in db.scalars(select(Domain).order_by(Domain.name))],

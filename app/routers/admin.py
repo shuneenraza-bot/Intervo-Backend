@@ -114,6 +114,11 @@ def update_question(question_id: str, body: QuestionIn, db: DbSession):
     return svc.update_question(db, question_id, body)
 
 
+@router.post("/questions/{question_id}/approve", response_model=QuestionOut)
+def approve_question(question_id: str, db: DbSession):
+    return svc.approve_question(db, question_id)
+
+
 @router.delete("/questions/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_question(question_id: str, db: DbSession):
     svc.delete_question(db, question_id)

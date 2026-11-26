@@ -32,7 +32,9 @@ class GeminiProvider(LLMProvider):
                 model=self._model,
                 contents=prompt,
                 config=self._types.GenerateContentConfig(
-                    response_mime_type="application/json", temperature=0, max_output_tokens=8192
+                    response_mime_type="application/json", max_output_tokens=8192,
+                    # extraction and scoring must be repeatable; a new question must vary
+                    temperature=0.9 if context.get("task") == "question" else 0,
                 ),
             )
         except errors.APIError as e:

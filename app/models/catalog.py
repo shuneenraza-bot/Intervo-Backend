@@ -68,6 +68,7 @@ class QuestionTemplate(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("type IN ('technical', 'behavioral')", name="type"),
         CheckConstraint("difficulty IN ('easy', 'medium', 'hard')", name="difficulty"),
+        CheckConstraint("status IN ('approved', 'generated')", name="status"),
     )
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
@@ -80,6 +81,11 @@ class QuestionTemplate(TimestampMixin, Base):
     follow_up: Mapped[str] = mapped_column(Text, default="", server_default="")
     difficulty: Mapped[str] = mapped_column(String(10), default="medium", server_default="medium")  # easy | medium | hard
     source: Mapped[str] = mapped_column(String(20), default="admin", server_default="admin")  # "admin" | "generated"
+    # "generated": written by Gemini for one candidate; not part of the question bank until an admin approves it.
+    status: Mapped[str] = mapped_column(String(20), default="approved", server_default="approved", index=True)
+    candidate_id: Mapped[str | None] = mapped_column(
+        String(40), ForeignKey("users.id", ondelete="SET NULL"), index=True
+    )  # who a "generated" question was written for; cleared on approval
 
     skill: Mapped[Skill] = relationship()
 

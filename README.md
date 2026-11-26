@@ -219,6 +219,7 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 | PUT | `/api/auth/face` | signed in (full token) | Re-enrol: replace the face template. There is no delete. Body: `{ "template": { "v": 2, "method": "landmarks", "features": [...] } }` |
 | GET | `/api/config` | signed in | Domains, skills, roles, questions, criteria and rules |
 | GET, POST | `/api/admin/domains`, `/roles`, `/skills`, `/questions` | admin | List and create. Skills have `aliases`, `related`, `tip`; roles have weighted skills (1 to 3); questions have `skill`, `type`, `text`, `keywords`, `followUp` |
+| POST | `/api/admin/questions/{id}/approve` | admin | Approve a generated question so it joins the question bank |
 | PUT, DELETE | `/api/admin/domains/{id}`, `/roles/{id}`, `/skills/{id}`, `/questions/{id}` | admin | Edit or delete. `404` unknown id, `409` duplicate name or still in use (for example `Skill is used by a role`) |
 | GET, PUT | `/api/admin/criteria` | admin | Weight 1 to 3 and `enabled` per criterion |
 | GET, PUT | `/api/admin/rules` | admin | `weakThreshold`, `weakMinSessions`, `followUpBelow`, `defaultQuestions`, `faceThreshold`, each range-checked |
@@ -261,7 +262,9 @@ All routes are under `/api`. Full request and response shapes are in the fronten
 
 ### Interview engine
 
-Walkthrough: [docs/run-an-interview.md](docs/run-an-interview.md). Selection and skill history port `selectQuestions` and `skillPerformance` from the frontend. Answers are scored against a fixed rubric: Gemini returns 0 to 100 per criterion plus tips, the application validates and clamps them and calculates the overall score from the `evaluation_criteria` weights (the model never does). Invalid or unavailable Gemini output falls back to the rule-based evaluator (a port of `evaluateAnswer`). Only the role title, skill, question, rubric and answer text are sent to Gemini, never the candidate's name or email. Run `alembic upgrade head` after pulling this change.
+Walkthrough: [docs/run-an-interview.md](docs/run-an-interview.md). Selection and skill history port `selectQuestions` and `skillPerformance` from the frontend. Answers are scored against a fixed rubric: Gemini returns 0 to 100 per criterion plus tips, the application validates and clamps them and calculates the overall score from the `evaluation_criteria` weights (the model never does). Invalid or unavailable Gemini output falls back to the rule-based evaluator (a port of `evaluateAnswer`). Scoring sends only the role title, skill, question, rubric and answer text to Gemini. Run `alembic upgrade head` after pulling this change.
+
+**Question writing** (`app/services/question_gen.py`). Selection decides the slots (skill, type, difficulty, reason); Gemini then writes one new question per slot with 4 to 6 expected key points and a follow-up. It is given the role and its responsibilities, the CV's skills and project names and technologies, the key points the candidate missed earlier on that skill, two stored templates as style examples and the skill's recent questions, never a name, email, phone, address or contact line. A reply is used only if it validates: right skill, under 60 words, 4 to 6 key points, no coding task, not a repeat. Otherwise (also on failure or timeout; the calls run in parallel under `AI_TIMEOUT_SECONDS`) the stored template for the slot is asked. A written question is saved as a template with status `generated` for that candidate; nobody else is asked it unless an admin approves it (`POST /api/admin/questions/{id}/approve`). Each answer records `questionOrigin`: `generated` or `template`.
 
 ### Candidate ranking and privacy
 

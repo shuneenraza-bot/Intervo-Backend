@@ -250,8 +250,9 @@ def test_when_every_template_is_used_gemini_writes_a_new_question(client, auth, 
         name = "gemini"
 
         def generate_json(self, prompt, schema, **context):
-            return {"text": "A fresh generated SQL question for an entry-level analyst?", "keywords": ["join", "table"],
-                    "follow_up": "Why?"}
+            return {"skill": context["skill"],
+                    "text": f"A fresh generated {context['skill']} question for an entry-level analyst?",
+                    "keywords": ["join", "table", "filter", "row"], "follow_up": "Why would you do it that way?"}
 
     monkeypatch.setattr(ai, "get_provider", lambda: Writer())
     picked = interview.select_questions(db, "Backend Developer", [{"name": "SQL", "weight": 3}], [], [], 2, [], _user(db).id)

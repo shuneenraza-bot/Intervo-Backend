@@ -16,6 +16,7 @@ erDiagram
     job_roles ||--o{ role_skills : "requires"
     skills ||--o{ role_skills : "is required by"
     skills ||--o{ question_templates : "is tested by"
+    users |o--o{ question_templates : "candidate_id"
     users |o--o{ jobs : "posts"
     job_roles ||--o{ jobs : "is template for"
     jobs ||--o{ job_skills : "requires"
@@ -112,7 +113,10 @@ erDiagram
         text text
         jsonb keywords
         text follow_up
+        varchar(10) difficulty
         varchar(20) source
+        varchar(20) status
+        varchar(40) candidate_id FK "nullable"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -214,6 +218,7 @@ erDiagram
         jsonb tips "nullable"
         varchar(20) provider "nullable"
         varchar(10) answer_source
+        varchar(10) question_origin
         boolean needs_follow_up
         text follow_up_question "nullable"
         timestamptz answered_at "nullable"
@@ -256,6 +261,7 @@ erDiagram
 | `job_roles` | `role_skills` | `role_id` | one to many, parent required | CASCADE |
 | `skills` | `role_skills` | `skill_id` | one to many, parent required | CASCADE |
 | `skills` | `question_templates` | `skill_id` | one to many, parent required | CASCADE |
+| `users` | `question_templates` | `candidate_id` | one to many, parent optional | SET NULL |
 | `users` | `jobs` | `employer_id` | one to many, parent optional | SET NULL |
 | `job_roles` | `jobs` | `role_id` | one to many, parent required | RESTRICT |
 | `jobs` | `job_skills` | `job_id` | one to many, parent required | CASCADE |

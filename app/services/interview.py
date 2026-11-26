@@ -1,4 +1,4 @@
-"""The adaptive interview engine: question selection, AI (or rule-based) answer evaluation,
+"""The adaptive interview engine: question selection and writing, AI (or rule-based) answer evaluation,
 session scoring and the candidate's progress.
 
 Selection and skill history port `selectQuestions` and `skillPerformance` from the frontend's
@@ -29,11 +29,11 @@ from app.models import (
     User,
 )
 from app.schemas.base import to_ms
-from app.schemas.interview import MAX_ANSWER_CHARS, AnswerBody, FollowUpBody, LLMEvaluation, LLMFollowUp, LLMQuestion, StartIn
+from app.schemas.interview import MAX_ANSWER_CHARS, AnswerBody, FollowUpBody, LLMEvaluation, LLMFollowUp, StartIn
 from app.config import settings
-from app.services import ai
+from app.services import ai, interview_rules, question_gen
 from app.services.ai import RuleBasedProvider, run_json_task
-from app.services.ai.prompts import RUBRIC, evaluation_prompt, follow_up_prompt, question_prompt
+from app.services.ai.prompts import RUBRIC, evaluation_prompt, follow_up_prompt
 from app.services.catalog import load_rules, load_skills, weighted_skills
 from app.services.matching import DEFAULT_RULES, average, js_round, match_skills, skill_performance
 
@@ -77,75 +77,65 @@ def _as_perf_input(sessions: list[InterviewSession]) -> list[dict]:
 
 def _template_dict(t: QuestionTemplate, reason: str) -> dict:
     return {"template_id": t.id, "skill": t.skill.name, "type": t.type, "text": t.text,
-            "keywords": t.keywords or [], "follow_up": t.follow_up or "", "reason": reason}
+            "keywords": t.keywords or [], "follow_up": t.follow_up or "", "reason": reason, "origin": "template"}
 
 
-def _generate_question(
-    db: Session, role_title: str, skill: Skill, qtype: str, reason: str, responsibilities: list[str] | None = None,
-    fallback: QuestionTemplate | None = None,
-) -> dict:
-    """Asks the provider for one question. A Gemini question is saved as a new template marked
-    "generated"; the offline stand-in is used once and not saved. When Gemini is not available and the
-    skill does have templates (all used recently), the least recently used template is asked again
-    instead of the generic offline question."""
-    q, provider = run_json_task(
-        question_prompt(role_title, skill.name, qtype, responsibilities), LLMQuestion,
-        task="question", skill=skill.name, role=role_title, type=qtype,
-    )
-    if provider == "rules" and fallback is not None:
-        return _template_dict(fallback, reason)
-    template_id = None
-    if provider != "rules":
-        template = QuestionTemplate(
-            id=new_id("q"), skill_id=skill.id, type=qtype, text=q.text, keywords=q.keywords,
-            follow_up=q.follow_up, source="generated",
-        )
-        db.add(template)
-        db.flush()
-        template_id = template.id
-    return {"template_id": template_id, "skill": skill.name, "type": qtype, "text": q.text,
-            "keywords": q.keywords, "follow_up": q.follow_up, "reason": reason}
+RECENT_SESSIONS = 3  # questions of this many latest sessions are not asked again while others exist
+MAX_MISSED = 8
 
 
-RECENT_SESSIONS = 3  # templates answered in this many latest sessions are not asked again while others exist
+def _recent_sessions(db: Session, candidate_id: str | None) -> list[InterviewSession]:
+    if candidate_id is None:
+        return []
+    return list(db.scalars(
+        select(InterviewSession).where(InterviewSession.candidate_id == candidate_id)
+        .options(selectinload(InterviewSession.answers)).order_by(InterviewSession.date.desc()).limit(RECENT_SESSIONS)
+    ))
 
 
 def _recent_template_ids(db: Session, candidate_id: str | None) -> dict[str, int]:
     """Template id -> how many sessions ago it was last answered (0 = latest session), over the
     candidate's last RECENT_SESSIONS sessions. Only answered questions count."""
-    if candidate_id is None:
-        return {}
-    sessions = db.scalars(
-        select(InterviewSession).where(InterviewSession.candidate_id == candidate_id)
-        .options(selectinload(InterviewSession.answers)).order_by(InterviewSession.date.desc()).limit(RECENT_SESSIONS)
-    ).all()
     seen: dict[str, int] = {}
-    for age, s in enumerate(sessions):
+    for age, s in enumerate(_recent_sessions(db, candidate_id)):
         for a in s.answers:
             if a.question_id and a.answered_at is not None:
                 seen.setdefault(a.question_id, age)
     return seen
 
 
-def select_questions(
-    db: Session, role_title: str, required: list[dict], weak: list[str], gaps: list[str], count: int,
-    responsibilities: list[str] | None = None, candidate_id: str | None = None,
-) -> list[dict]:
-    """Persistent weaknesses first, then CV gaps, then the role's highest-weighted skills, and
-    always at least one behavioural question. A template the candidate answered in their last
-    3 sessions is skipped while another template for the skill exists; when every template of the
-    skill was used recently, a new question is generated (see _generate_question)."""
-    recent = _recent_template_ids(db, candidate_id)
+def _missed_points(db: Session, candidate_id: str | None, skill_id: str) -> list[str]:
+    """Expected key points that the candidate's earlier answers on this skill did not mention, newest first."""
+    if candidate_id is None:
+        return []
+    rows = db.scalars(
+        select(SessionAnswer).join(InterviewSession)
+        .where(InterviewSession.candidate_id == candidate_id, SessionAnswer.skill_id == skill_id,
+               SessionAnswer.answered_at.is_not(None))
+        .order_by(SessionAnswer.answered_at.desc()).limit(10)
+    )
+    missed: dict[str, None] = {}
+    for a in rows:
+        said = f"{a.answer} {(a.follow_up or {}).get('answer', '')}".lower()
+        missed.update(dict.fromkeys(k for k in a.keywords or [] if k.lower() not in said))
+    return list(missed)[:MAX_MISSED]
 
-    def choose(pool: list[QuestionTemplate]) -> tuple[QuestionTemplate | None, QuestionTemplate | None]:
-        """(template to ask, or None if all are used up; least recently used template as a fallback)"""
+
+def _plan_slots(
+    skills: dict[str, Skill], templates: list[QuestionTemplate], role_skills: list[str], weak: list[str],
+    gaps: list[str], count: int, recent: dict[str, int],
+) -> list[question_gen.Slot]:
+    """Persistent weaknesses first, then CV gaps, then the role's highest-weighted skills, one
+    question per skill and always at least one behavioural. Each slot carries the stored template
+    to use if no new question is written: one the candidate hasn't answered in their last 3
+    sessions, otherwise the least recently used one."""
+
+    def choose(pool: list[QuestionTemplate]) -> QuestionTemplate | None:
         fresh = [t for t in pool if t.id not in recent]
-        oldest = max(pool, key=lambda t: recent.get(t.id, 99)) if pool else None
-        return (random.choice(fresh) if fresh else None), oldest
+        if fresh:
+            return random.choice(fresh)
+        return max(pool, key=lambda t: recent.get(t.id, 99)) if pool else None
 
-    role_skills = [r["name"] for r in sorted(required, key=lambda r: -r["weight"])]
-    skills = {s.name: s for s in db.scalars(select(Skill))}
-    templates = db.scalars(select(QuestionTemplate).options(selectinload(QuestionTemplate.skill))).all()
     by_skill: dict[str, list[QuestionTemplate]] = {}
     for t in templates:
         by_skill.setdefault(t.skill.name, []).append(t)
@@ -158,40 +148,97 @@ def select_questions(
     behavioural = [t for t in templates if t.type == "behavioral"]
     others = [t.skill.name for t in random.sample(behavioural, len(behavioural)) if t.skill.name not in focus]
 
-    picked: list[dict] = []
+    picked: list[question_gen.Slot] = []
     used: set[str] = set()
     for name in [*focus, *dict.fromkeys(others)]:
         if len(picked) >= count:
             break
-        if name in used:
+        if name in used or name not in skills:
             continue
         pool = by_skill.get(name, [])
         if name not in focus:  # only behavioural questions come from skills outside the role
             pool = [t for t in pool if t.type == "behavioral"]
-        template, oldest = choose(pool)
-        if template is not None:
-            picked.append(_template_dict(template, reason(name)))
-        elif name in skills:
-            qtype = oldest.type if oldest is not None else "technical"
-            picked.append(_generate_question(db, role_title, skills[name], qtype, reason(name), responsibilities, oldest))
-        else:
-            continue
+        template = choose(pool)
+        qtype = template.type if template is not None else "technical"
+        picked.append(question_gen.Slot(skills[name], qtype, reason(name), template))
         used.add(name)
 
-    if not any(p["type"] == "behavioral" for p in picked):
-        spare = [t for t in behavioural if t.skill.name not in used and t.id not in recent]
-        q = None
+    if not any(p.type == "behavioral" for p in picked):
+        full = len(picked) >= count  # then the behavioural question replaces the last slot, freeing its skill
+        taken = {p.skill.name for p in (picked[:-1] if full else picked)}
+        spare = [t for t in behavioural if t.skill.name not in taken and t.id not in recent]
+        slot = None
         if spare:
-            q = _template_dict(random.choice(spare), "general")
+            t = random.choice(spare)
+            slot = question_gen.Slot(t.skill, "behavioral", reason(t.skill.name), t)
         else:
-            name = next((n for n in BEHAVIOURAL_FALLBACK_SKILLS if n in skills), None) or next(iter(role_skills), None)
-            if name in skills:
-                q = _generate_question(db, role_title, skills[name], "behavioral", reason(name), responsibilities)
-        if q is not None:
-            if len(picked) >= count:
-                picked[-1] = q
+            names = [n for n in (*BEHAVIOURAL_FALLBACK_SKILLS, *role_skills) if n in skills and n not in taken]
+            if names:
+                oldest = choose([t for t in by_skill.get(names[0], []) if t.type == "behavioral"])
+                slot = question_gen.Slot(skills[names[0]], "behavioral", reason(names[0]), oldest)
+        if slot is not None:
+            if full:
+                picked[-1] = slot
             else:
-                picked.append(q)
+                picked.append(slot)
+    return picked
+
+
+def select_questions(
+    db: Session, role_title: str, required: list[dict], weak: list[str], gaps: list[str], count: int,
+    responsibilities: list[str] | None = None, candidate_id: str | None = None,
+) -> list[dict]:
+    """Plans the slots (see _plan_slots), then asks the provider for a new question for each one.
+    A written question is saved as a "generated" template belonging to the candidate. Where none
+    can be used (provider off, failure, timeout, invalid output) the slot's stored template is
+    asked; a skill with no stored template gets the offline stand-in, which is not saved."""
+    skills = {s.name: s for s in db.scalars(select(Skill))}
+    every = db.scalars(select(QuestionTemplate).options(selectinload(QuestionTemplate.skill))).all()
+    templates = [t for t in every if t.status == "approved"]  # the bank everyone is asked from
+    role_skills = [r["name"] for r in sorted(required, key=lambda r: -r["weight"])]
+    slots = _plan_slots(skills, templates, role_skills, weak, gaps, count, _recent_template_ids(db, candidate_id))
+
+    user = db.get(User, candidate_id) if candidate_id else None
+    profile = db.get(CandidateProfile, candidate_id) if candidate_id else None
+    private = question_gen.private_values(user, profile)
+    asked = [a for s in _recent_sessions(db, candidate_id) for a in s.answers]
+    for slot in slots:
+        pool = [t for t in templates if t.skill_id == slot.skill.id]
+        same_type = [t for t in pool if t.type == slot.type]
+        source = same_type if len(same_type) >= 2 else pool
+        slot.examples = [t.text for t in random.sample(source, min(2, len(source)))]
+        slot.missed = [question_gen.clean(k, private, 60) for k in _missed_points(db, candidate_id, slot.skill.id)]
+        recent_texts = [question_gen.clean(a.question, private, 600) for a in asked if a.skill_id == slot.skill.id]
+        slot.recent = list(dict.fromkeys(recent_texts))
+        stored = [t.text for t in every if t.skill_id == slot.skill.id
+                  and (t.status == "approved" or t.candidate_id == candidate_id)]
+        slot.known = [*stored, *(a.question for a in asked)]
+
+    context = question_gen.candidate_context(user, profile, list(skills))
+    written = question_gen.generate(
+        role_title, responsibilities or [], context, slots, question_gen.vocabulary(list(skills.values()), templates)
+    )
+
+    picked: list[dict] = []
+    for slot, q in zip(slots, written):
+        if q is not None:
+            template = QuestionTemplate(
+                id=new_id("q"), skill_id=slot.skill.id, type=slot.type, text=q.text, keywords=q.keywords,
+                follow_up=q.follow_up, difficulty=slot.difficulty, source="generated", status="generated",
+                candidate_id=candidate_id,
+            )
+            db.add(template)
+            db.flush()
+            picked.append({"template_id": template.id, "skill": slot.skill.name, "type": slot.type, "text": q.text,
+                           "keywords": q.keywords, "follow_up": q.follow_up, "reason": slot.reason,
+                           "origin": "generated"})
+        elif slot.fallback is not None:
+            picked.append(_template_dict(slot.fallback, slot.reason))
+        else:
+            stand_in = interview_rules.generic_question(slot.skill.name, role_title, slot.type)
+            picked.append({"template_id": None, "skill": slot.skill.name, "type": slot.type, "text": stand_in["text"],
+                           "keywords": stand_in["keywords"], "follow_up": stand_in["follow_up"],
+                           "reason": slot.reason, "origin": "template"})
     return picked
 
 
@@ -234,7 +281,7 @@ def start(db: Session, user: User, body: StartIn) -> dict:
             SessionAnswer(
                 id=new_id("ans"), skill_id=skill_ids.get(q["skill"]), question_id=q["template_id"], position=i,
                 question=q["text"], type=q["type"], reason=q["reason"], keywords=q["keywords"],
-                follow_up_question=q["follow_up"] or None,
+                follow_up_question=q["follow_up"] or None, question_origin=q["origin"],
             )
             for i, q in enumerate(questions)
         ],
@@ -420,7 +467,7 @@ def _answer_out(a: SessionAnswer) -> dict:
         "score": a.score, "criteria": a.criteria or {}, "tips": a.tips or [], "provider": a.provider,
         "needsFollowUp": a.needs_follow_up, "followUp": a.follow_up or None,
         "followUpQuestion": a.follow_up_question if a.needs_follow_up else None, "indicators": a.indicators,
-        "answerSource": a.answer_source,
+        "answerSource": a.answer_source, "questionOrigin": a.question_origin,
     }
 
 
